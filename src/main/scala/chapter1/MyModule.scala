@@ -1,3 +1,4 @@
+package chapter1
 
 object MyModule {
   def abs(n: Int): Int =
