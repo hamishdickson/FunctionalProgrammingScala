@@ -1,4 +1,4 @@
-package chapter1
+package chapter2
 
 object MyModule {
   def abs(n: Int): Int =
