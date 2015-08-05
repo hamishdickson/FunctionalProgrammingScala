@@ -66,6 +66,19 @@ object MyModule {
     loop(0)
   }
 
+  /**
+   * Exercise 2.2: Implement isSorted, which checks whether an Array[A] is sorted according to a given comparison
+   * function
+   */
+  def isSorted[A](as: Array[A], ordered: (A, A) => Boolean): Boolean = {
+    def loop(n: Int, m: Int): Boolean = {
+      if (m >= as.length) true
+      else if (!ordered(as(n), as(m))) false
+      else loop(m, m+1)
+    }
+    loop(0, 1)
+  }
+
   def main(args: Array[String]): Unit = {
     println(formatAbs(-42))
     println(formatFactorial(7))
