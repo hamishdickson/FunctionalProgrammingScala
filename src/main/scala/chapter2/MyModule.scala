@@ -79,10 +79,20 @@ object MyModule {
     loop(0, 1)
   }
 
+  /**
+   * partial applictaion: takes a value and a function of two args and returns a function of one arg as the
+   * result
+   */
+  def partial1[A, B, C](a: A, f: (A, B) => C): B => C =
+    (b: B) => f(a, b)
+
   def main(args: Array[String]): Unit = {
     println(formatAbs(-42))
     println(formatFactorial(7))
 
     println(formatResult("factorial", 7, factorial))
+
+    // note you can do things with an anoymous function
+    findFirst(Array(7, 9, 13), (x: Int) => x == 9)
   }
 }
