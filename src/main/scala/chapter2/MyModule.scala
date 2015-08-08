@@ -100,6 +100,12 @@ object MyModule {
   def uncurry[A, B, C](f: A => B => C): (A, B) => C =
     (a, b) => f(a)(b)
 
+  /**
+   * Exercise 2.5: Implement the higher-order function that composes two functions
+   */
+  def compose[A, B, C](f: B => C, g: A => B): A => C =
+    a => f(g(a))
+
 
   /**
    * main
