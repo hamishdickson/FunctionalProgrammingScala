@@ -87,12 +87,23 @@ object MyModule {
     (b: B) => f(a, b)
 
   /**
-   * Example 2.3: Currying. Converts a function f of two args into a function of one arg that partially applies f
+   * Exercise 2.3: Currying. Converts a function f of two args into a function of one arg that partially applies f
    * There is only one implementation that compiles - write it
    */
   def curry[A, B, C](f: (A, B) => C): A => (B => C) =
     a => b => f(a, b)
 
+  /**
+   * Exercise 2.4: Uncurry. Reverses the transformation of curry. Note that since => associates to the right,
+   * A => (B => C) can be written as A => B => C
+   */
+  def uncurry[A, B, C](f: A => B => C): (A, B) => C =
+    (a, b) => f(a)(b)
+
+
+  /**
+   * main
+   */
   def main(args: Array[String]): Unit = {
     println(formatAbs(-42))
     println(formatFactorial(7))
