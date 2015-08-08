@@ -86,6 +86,13 @@ object MyModule {
   def partial1[A, B, C](a: A, f: (A, B) => C): B => C =
     (b: B) => f(a, b)
 
+  /**
+   * Example 2.3: Currying. Converts a function f of two args into a function of one arg that partially applies f
+   * There is only one implementation that compiles - write it
+   */
+  def curry[A, B, C](f: (A, B) => C): A => (B => C) =
+    a => b => f(a, b)
+
   def main(args: Array[String]): Unit = {
     println(formatAbs(-42))
     println(formatFactorial(7))
