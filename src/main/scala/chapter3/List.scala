@@ -30,4 +30,13 @@ object List {
   def apply[A](as: A*): List[A] =
     if (as.isEmpty) Nil
     else Cons(as.head, apply(as.tail: _*))
+
+  /**
+   * Exercise 3.2: Implement the function tail for removing the first element of a list. Note that the function takes
+   * constant time. What are the different choices you can make in your implementation if the list is Nil?
+   */
+  def tail[A](l: List[A]): List[A] = l match {
+    case Nil => Nil // could just as well throw an exception here
+    case Cons(_, t) => t // _ is important here, it implies you don't care - it's a good practice thing
+  }
 }
