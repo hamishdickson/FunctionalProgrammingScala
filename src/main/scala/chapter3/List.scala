@@ -75,4 +75,15 @@ object List {
       case Nil => a2
       case Cons(h, t) => Cons(h, append(t, a2))
     }
+
+  /**
+   * Exercise 3.6: Implement a function init, that returns a list consisting of all but the last element of a list. So
+   * given a list(1, 2, 3, 4), init will return a list List(1, 2, 3). Why can't this function be implemented in
+   * constant time tail?
+   */
+  def init[A](l: List[A]): List[A] = l match {
+    case Nil => Nil
+    case Cons(_, Nil) => Nil
+    case Cons(h, t) => Cons(h, init(t))
+  }
 }
