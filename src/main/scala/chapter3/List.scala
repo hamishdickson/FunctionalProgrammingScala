@@ -70,6 +70,15 @@ object List {
     case _ => l
   }
 
+  /**
+   * Interestingly, to use dropWhile above you need to specify the type in the function, but if you curry the function
+   * you don't need to. (It's a compilier thing)
+   */
+  def dropWhileCurry[A](l: List[A])(f: A => Boolean): List[A] = l match {
+    case Cons(h, t) if f(h) => dropWhile(t, f)
+    case _ => l
+  }
+
   def append[A](a1: List[A], a2: List[A]): List[A] =
     a1 match {
       case Nil => a2
