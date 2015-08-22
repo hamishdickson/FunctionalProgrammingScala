@@ -27,6 +27,21 @@ object List {
     case Cons(x, xs) => x * product(xs)
   }
 
+  /**
+   * Note, sum and product are very similar (ignore the second case in product) - could write a function to do both
+   */
+  def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B = {
+    as match {
+      case Nil => z
+      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
+    }
+  }
+
+  def sum2(ns: List[Int]) = foldRight(ns, 0)((x, y) => x + y)
+
+  def product2(ns: List[Double]) = foldRight(ns, 1.0)(_ * _) // same as (x,y) => x * y
+
+
   def apply[A](as: A*): List[A] =
     if (as.isEmpty) Nil
     else Cons(as.head, apply(as.tail: _*))
