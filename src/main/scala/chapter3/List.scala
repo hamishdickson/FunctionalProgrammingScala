@@ -152,4 +152,10 @@ object List {
    * Exercise 3.14: Implement append using foldRight
    */
   def append2[A](a1: List[A], a2: List[A]): List[A] = foldRight(a1, a2)(Cons(_, _))
+
+  /**
+   * Exercise 3.15: Write a function that concatenates a list of lists into a single list. Its runtime should be
+   * linear in the total length of all lists.
+   */
+  def concatLists[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])(append2)
 }
