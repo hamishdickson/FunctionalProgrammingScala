@@ -55,6 +55,13 @@ object List {
   }
 
   /**
+   * Exercise 3.13: Write foldLeft in terms of foldRight
+   */
+  def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = foldRight(as, (b: B) => b)((a, g) => b => g(f(b, a)))(z)
+
+  def foldRight2[A, B](as: List[A], z: B)(f: (A, B) => B): B = foldLeft(reverse(as), z)((a, b) => f(b, a))
+
+  /**
    * Exercise 3.11: Write sum, product and length using foldLeft
    */
   def sum3(ns: List[Int]) = foldLeft(ns, 0)(_ + _)
@@ -134,9 +141,7 @@ object List {
   /**
    * Exercise 3.9: Compute the length of a list using foldRight
    */
-  def length[A](as: List[A]): Int = {
-    foldRight(as, 0)((_, x) => 1 + x)
-  }
+  def length[A](as: List[A]): Int = foldRight(as, 0)((_, x) => 1 + x)
 
   /**
    * Exercise 3.12: Implement reverse using foldLeft
