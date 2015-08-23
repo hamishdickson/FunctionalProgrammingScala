@@ -147,4 +147,9 @@ object List {
    * Exercise 3.12: Implement reverse using foldLeft
    */
   def reverse[A](as: List[A]): List[A] = foldLeft(as, List[A]())((x, h) => Cons(h, x))
+
+  /**
+   * Exercise 3.14: Implement append using foldRight
+   */
+  def append2[A](a1: List[A], a2: List[A]): List[A] = foldRight(a1, a2)(Cons(_, _))
 }
