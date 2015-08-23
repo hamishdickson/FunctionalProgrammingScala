@@ -1,5 +1,7 @@
 package chapter3
 
+import scala.annotation.tailrec
+
 /**
  * sealed trait means all implementations must be declared in the file
  */
@@ -28,12 +30,23 @@ object List {
   }
 
   /**
-   * Note, sum and product are very similar (ignore the second case in product) - could write a function to do both
+    * Note, sum and product are very similar (ignore the second case in product) - could write a function to do both
    */
   def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B = {
     as match {
       case Nil => z
       case Cons(x, xs) => f(x, foldRight(xs, z)(f))
+    }
+  }
+
+  /**
+   * Exercise 3.10: Write foldLeft
+   */
+  @tailrec
+  def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
+    as match {
+      case Nil => z
+      case Cons(h, t) => foldLeft(t, f(z, h))(f)
     }
   }
 
@@ -86,7 +99,7 @@ object List {
   }
 
   /**
-   * Interestingly, to use dropWhile above you need to specify the type in the function, but if you curry the function
+    * Interestingly, to use dropWhile above you need to specify the type in the function, but if you curry the function
    * you don't need to. (It's a compilier thing)
    */
   def dropWhileCurry[A](l: List[A])(f: A => Boolean): List[A] = l match {
