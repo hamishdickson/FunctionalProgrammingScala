@@ -137,4 +137,9 @@ object List {
   def length[A](as: List[A]): Int = {
     foldRight(as, 0)((_, x) => 1 + x)
   }
+
+  /**
+   * Exercise 3.12: Implement reverse using foldLeft
+   */
+  def reverse[A](as: List[A]): List[A] = foldLeft(as, List[A]())((x, h) => Cons(h, x))
 }
