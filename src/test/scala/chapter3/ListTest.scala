@@ -35,4 +35,22 @@ class ListTest extends FlatSpec with Matchers {
     len2 should be (5)
   }
 
+  "sum3" should "give the same result as sum2" in {
+    val as: List[Int] = List(1, 2, 3, 4, 5)
+
+    List.sum3(as) should be (List.sum2(as))
+  }
+
+  "product3" should "give the same result as product2" in {
+    val as: List[Double] = List(1, 2, 3, 4, 5)
+
+    List.product3(as) should be (List.product2(as))
+  }
+
+  "length3" should "give the same result as length" in {
+    val as: List[Int] = List(1, 2, 3, 4, 5)
+
+    List.length3(as) should be (List.length(as))
+  }
+
 }
