@@ -110,4 +110,11 @@ object List {
     case Cons(_, Nil) => Nil
     case Cons(h, t) => Cons(h, init(t))
   }
+
+  /**
+   * Exercise 3.9: Compute the length of a list using foldRight
+   */
+  def length[A](as: List[A]): Int = {
+    foldRight(as, 0)((_, x) => 1 + x)
+  }
 }
