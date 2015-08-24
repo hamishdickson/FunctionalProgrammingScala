@@ -53,4 +53,11 @@ class ListTest extends FlatSpec with Matchers {
     List.length3(as) should be (List.length(as))
   }
 
+  "addOne" should "add one to each element of an Int list" in {
+    val xs: List[Int] = List(1, 2, 3)
+    val ys: List[Int] = List(2, 3, 4)
+
+    List.addOne(xs) should be (ys)
+  }
+
 }

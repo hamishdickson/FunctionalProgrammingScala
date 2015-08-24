@@ -30,7 +30,7 @@ object List {
   }
 
   /**
-    * Note, sum and product are very similar (ignore the second case in product) - could write a function to do both
+   * Note, sum and product are very similar (ignore the second case in product) - could write a function to do both
    */
   def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B = {
     as match {
@@ -65,7 +65,9 @@ object List {
    * Exercise 3.11: Write sum, product and length using foldLeft
    */
   def sum3(ns: List[Int]) = foldLeft(ns, 0)(_ + _)
+
   def product3(ns: List[Double]) = foldRight(ns, 1.0)(_ * _)
+
   def length3[A](as: List[A]): Int = foldLeft(as, 0)((x, _) => 1 + x)
 
 
@@ -100,7 +102,7 @@ object List {
     if (n <= 0) l
     else l match {
       case Nil => Nil
-      case Cons(_, t) => drop(t, n-1)
+      case Cons(_, t) => drop(t, n - 1)
     }
   }
 
@@ -113,7 +115,7 @@ object List {
   }
 
   /**
-    * Interestingly, to use dropWhile above you need to specify the type in the function, but if you curry the function
+   * Interestingly, to use dropWhile above you need to specify the type in the function, but if you curry the function
    * you don't need to. (It's a compilier thing)
    */
   def dropWhileCurry[A](l: List[A])(f: A => Boolean): List[A] = l match {
@@ -157,5 +159,11 @@ object List {
    * Exercise 3.15: Write a function that concatenates a list of lists into a single list. Its runtime should be
    * linear in the total length of all lists.
    */
-  def concatLists[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])(append2)
+  def concat[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])(append2)
+
+  /**
+   * Exercise 3.16: Write a function that transforms a list of Ints by adding 1 to each element. It should be a pure
+   * function
+   */
+  def addOne(l: List[Int]): List[Int] = foldRight(l, Nil: List[Int])((h, t) => Cons(h + 1, t))
 }
