@@ -166,4 +166,9 @@ object List {
    * function
    */
   def addOne(l: List[Int]): List[Int] = foldRight(l, Nil: List[Int])((h, t) => Cons(h + 1, t))
+
+  /**
+   * Exercise 3.17: Write a function that transforms a list of Doubles into a list of Strings
+   */
+  def stringDouble(l: List[Double]): List[String] = foldRight(l, Nil: List[String])((h, t) => Cons(h.toString, t))
 }

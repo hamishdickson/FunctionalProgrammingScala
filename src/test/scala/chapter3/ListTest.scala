@@ -60,4 +60,11 @@ class ListTest extends FlatSpec with Matchers {
     List.addOne(xs) should be (ys)
   }
 
+  "doubleString" should "transform a list of Doubles to a list of Strings" in {
+    val xs: List[Double] = List(1, 2, 3)
+    val ys: List[String] = List("1.0", "2.0", "3.0")
+
+    List.stringDouble(xs) should be (ys)
+  }
+
 }
