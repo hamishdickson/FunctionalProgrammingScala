@@ -171,4 +171,10 @@ object List {
    * Exercise 3.17: Write a function that transforms a list of Doubles into a list of Strings
    */
   def stringDouble(l: List[Double]): List[String] = foldRight(l, Nil: List[String])((h, t) => Cons(h.toString, t))
+
+  /**
+   * Exercise 3.18: Write a function map that generalises modifying each element in a list while maintaining the
+   * structure of the list
+   */
+  def map[A,B](as: List[A])(f: A => B): List[B] = foldRight(as, Nil: List[B])((h, t) => Cons(f(h), t))
 }
