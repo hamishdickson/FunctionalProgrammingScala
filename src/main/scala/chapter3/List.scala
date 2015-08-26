@@ -197,4 +197,14 @@ object List {
    */
   def filter2[A](as: List[A])(f: A => Boolean): List[A] =
     flatMap(as)(a => if (f(a)) List(a) else Nil: List[A])
+
+  /**
+   * Exercise 3.22: Write a function that accepts 2 lists and constructs a new list by adding corresponding
+   * elements
+   */
+  def builder(a1: List[Int], a2: List[Int]): List[Int] = (a1, a2) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1 + h2, builder(t1, t2))
+  }
 }
