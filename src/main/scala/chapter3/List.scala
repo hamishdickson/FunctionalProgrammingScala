@@ -191,4 +191,10 @@ object List {
    * foldRight(as, Nil: List[A])((h,t) => append(f(h), t))
    */
   def flatMap[A,B](as: List[A])(f: A => List[B]): List[B] = concat(map(as)(f))
+
+  /**
+   * Exercise 3.21: Implement filter with flatMap
+   */
+  def filter2[A](as: List[A])(f: A => Boolean): List[A] =
+    flatMap(as)(a => if (f(a)) List(a) else Nil: List[A])
 }
