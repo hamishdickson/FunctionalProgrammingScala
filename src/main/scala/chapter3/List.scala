@@ -207,4 +207,13 @@ object List {
     case (_, Nil) => Nil
     case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1 + h2, builder(t1, t2))
   }
+
+  /**
+   * Exercise 3.23: Generalize the function in 3.22 so that it's not specific to ints or addition
+   */
+  def zipWith[A](a1: List[A], a2: List[A])(f: (A, A) => A): List[A] = (a1, a2) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(h1, t1), Cons(h2, t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
+  }
 }
