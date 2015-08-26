@@ -177,4 +177,10 @@ object List {
    * structure of the list
    */
   def map[A,B](as: List[A])(f: A => B): List[B] = foldRight(as, Nil: List[B])((h, t) => Cons(f(h), t))
+
+  /**
+   * Exercise 3.19: Write a function filter that removes elements form a list unless they satisfy a predicate
+   */
+  def filter[A](as: List[A])(f: A => Boolean): List[A] =
+    foldRight(as, Nil: List[A])((h,t) => if (f(h)) Cons(h, t) else t)
 }

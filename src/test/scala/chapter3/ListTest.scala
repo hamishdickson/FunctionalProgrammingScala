@@ -67,4 +67,11 @@ class ListTest extends FlatSpec with Matchers {
     List.stringDouble(xs) should be (ys)
   }
 
+  "filter" should "filter out elements that don't match" in {
+    val xs: List[Int] = List(1, 2, 3, 4, 5, 6)
+    val ys: List[Int] = List(2, 4, 6)
+
+    List.filter(xs)(a => a % 2 == 0) should be (ys)
+  }
+
 }
