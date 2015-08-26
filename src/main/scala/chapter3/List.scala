@@ -183,4 +183,12 @@ object List {
    */
   def filter[A](as: List[A])(f: A => Boolean): List[A] =
     foldRight(as, Nil: List[A])((h,t) => if (f(h)) Cons(h, t) else t)
+
+  /**
+   * Exercise 3.20: Write flatMap
+   *
+   * I originally tired to do this with foldRight and append, but got in all sorts of type issues
+   * foldRight(as, Nil: List[A])((h,t) => append(f(h), t))
+   */
+  def flatMap[A,B](as: List[A])(f: A => List[B]): List[B] = concat(map(as)(f))
 }

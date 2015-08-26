@@ -74,4 +74,11 @@ class ListTest extends FlatSpec with Matchers {
     List.filter(xs)(a => a % 2 == 0) should be (ys)
   }
 
+  "flatmap" should "do flatmap thingys" in {
+    val xs: List[Int] = List(1, 2, 3)
+    val ys: List[Int] = List(1, 1, 2, 2, 3, 3)
+
+    List.flatMap(xs)(i => List(i, i)) should be (ys)
+  }
+
 }
