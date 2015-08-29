@@ -8,16 +8,20 @@ import scala.annotation.tailrec
 sealed trait List[+A] // note: the plus means covariant
 
 /**
- * covarience: if X is a subtype of Y => List[X] is a subtype of List[Y]
+  * covarience: if X is a subtype of Y => List[X] is a subtype of List[Y]
  */
 
 /**
- * these two implementations are called "data constructors"
+  * these two implementations are called "data constructors"
  */
 case object Nil extends List[Nothing] // an empty list
 case class Cons[+A](head: A, tail: List[A]) extends List[A] // a non-empty list
 
 object List {
+  def apply[A](as: A*): List[A] =
+    if (as.isEmpty) Nil
+    else Cons(as.head, apply(as.tail: _*))
+
   def sum(ints: List[Int]): Int = ints match {
     case Nil => 0
     case Cons(x, xs) => x + sum(xs)
@@ -30,7 +34,7 @@ object List {
   }
 
   /**
-   * Note, sum and product are very similar (ignore the second case in product) - could write a function to do both
+    * Note, sum and product are very similar (ignore the second case in product) - could write a function to do both
    */
   def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B = {
     as match {
@@ -44,7 +48,7 @@ object List {
   def product2(ns: List[Double]) = foldRight(ns, 1.0)(_ * _) // same as (x,y) => x * y
 
   /**
-   * Exercise 3.10: Write foldLeft
+    * Exercise 3.10: Write foldLeft
    */
   @tailrec
   def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
@@ -55,25 +59,20 @@ object List {
   }
 
   /**
-   * Exercise 3.13: Write foldLeft in terms of foldRight
+    * Exercise 3.13: Write foldLeft in terms of foldRight
    */
   def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = foldRight(as, (b: B) => b)((a, g) => b => g(f(b, a)))(z)
 
   def foldRight2[A, B](as: List[A], z: B)(f: (A, B) => B): B = foldLeft(reverse(as), z)((a, b) => f(b, a))
 
   /**
-   * Exercise 3.11: Write sum, product and length using foldLeft
+    * Exercise 3.11: Write sum, product and length using foldLeft
    */
   def sum3(ns: List[Int]) = foldLeft(ns, 0)(_ + _)
 
   def product3(ns: List[Double]) = foldRight(ns, 1.0)(_ * _)
 
   def length3[A](as: List[A]): Int = foldLeft(as, 0)((x, _) => 1 + x)
-
-
-  def apply[A](as: A*): List[A] =
-    if (as.isEmpty) Nil
-    else Cons(as.head, apply(as.tail: _*))
 
   /**
    * Exercise 3.2: Implement the function tail for removing the first element of a list. Note that the function takes
