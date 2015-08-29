@@ -36,4 +36,23 @@ object Tree {
     case Leaf(n) => Leaf(f(n))
     case Branch(l, r) => Branch(map(l)(f), map(r)(f))
   }
+
+  /**
+   * Exercise 2.29: Write a function fold, then use it for these other
+   */
+  def fold[A,B](t: Tree[A])(f: A => B)(g: (B, B) => B): B = t match {
+    case Leaf(n) => f(n)
+    case Branch(l, r) => g(fold(l)(f)(g), fold(r)(f)(g))
+  }
+
+  def size2[A](t: Tree[A]): Int = fold(t)(_ => 1)(1 + _ + _)
+
+  def maximum2(t: Tree[Int]): Int = fold(t)(n => n)(_ max _)
+
+  def depth2[A](t: Tree[A]): Int = fold(t)(a => 0)((l, r) => 1 + (l max r))
+
+  /**
+   * Needed help with the types here, apparently it's a scala thing - see solutions
+   */
+  def map2[A, B](t: Tree[A])(f: A => B): Tree[B] = fold(t)(n => Leaf(f(n)): Tree[B])(Branch(_, _))
 }
