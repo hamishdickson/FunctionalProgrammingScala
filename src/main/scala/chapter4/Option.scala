@@ -73,6 +73,19 @@ object Option {
     a flatMap(aa => b map (bb => f(aa, bb)))
 
   /**
+   * as a for...
+   *
+   * for-comprehensions in scala consist of a seq of bindings like aa <- a followed by a yield
+   *
+   * the compilier de-sugars this to a flatmap, with the final binding and yield converted to a map
+   */
+  def map2_for[A,B,C](a: Option[A], b: Option[B])(f: (A,B) => C): Option[C] =
+    for {
+      aa <- a
+      bb <- b
+    } yield f(aa, bb)
+
+  /**
    * Exercise 4.4: Write a function sequence that combines a list of Options into one Option containing a list
    * of all the same Some values in the original list. If the original list contains None even once, the result
    * of the function should be None; otherwise the result should be Some with a list of all the values
@@ -98,7 +111,7 @@ object Option {
 
   def traverse[A,B](a: List[A])(f: A => Option[B]): Option[List[B]] =
     a.foldRight[Option[List[B]]](Some(Nil))((h,t) => map2(f(h),t)(_ :: _))
-  
+
 }
 
 
