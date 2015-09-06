@@ -3,6 +3,7 @@ package chapter4
 import chapter3.Cons
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 sealed trait Option[+A] {
 
@@ -87,6 +88,17 @@ object Option {
     case Nil => Some(Nil)
     case h :: t => h flatMap(hh => sequence_rec(t) map(hh :: _))
   }
+
+  /**
+   * Exercise 4.5: Implement traverse
+   *
+   * Try and do this so that it only looks at the list once
+   */
+  def traverse_slow[A,B](a: List[A])(f: A => Option[B]): Option[List[B]] = sequence(a map (i => f(i)))
+
+  def traverse[A,B](a: List[A])(f: A => Option[B]): Option[List[B]] =
+    a.foldRight[Option[List[B]]](Some(Nil))((h,t) => map2(f(h),t)(_ :: _))
+  
 }
 
 
