@@ -8,12 +8,16 @@ class InsuranceCalculator {
   def insuranceRateQuote(age: Int, numberOfSpeedingTickets: Int): Double = 5.0
 
   def parseInsuranceRateQuote(age: String, numberOfSpeedingTickets: String): Option[Double] = {
-    val optAge: Option[Int] = Try(age.toInt)
-    val optTickets: Option[Int] = Try(numberOfSpeedingTickets.toInt)
+    val optAge: Option[Int] = Try { age.toInt } // functions with single args can be passed with {} instead of ()
+    val optTickets: Option[Int] = Try { numberOfSpeedingTickets.toInt }
 
     // this doesn't type check as optAge and optTickets are Option[Int] not Int
     //insuranceRateQuote(optAge, optTickets)
-    Some(5)
+
+    /**
+     * if either parse fails - get None
+     */
+    Option.map2(optAge, optTickets)(insuranceRateQuote)
   }
 
   def Try[A](a: => A): Option[A] =
