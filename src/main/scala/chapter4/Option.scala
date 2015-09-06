@@ -1,10 +1,5 @@
 package chapter4
 
-import chapter3.Cons
-
-import scala.annotation.tailrec
-import scala.util.Try
-
 sealed trait Option[+A] {
 
   /**
