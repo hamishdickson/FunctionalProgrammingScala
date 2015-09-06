@@ -2,15 +2,18 @@ package chapter4
 
 sealed trait Option[+A] {
 
+  /**
+   * Change each element in the option if it exists
+   */
   def map[B](f: A => B): Option[B] = this match {
     case None => None
     case Some(a) => Some(f(a))
   }
 
-  // apply f, which may fail to thw Option if not None
+  // apply f, which may fail to the Option if not None
   def flatMap[B](f: A => Option[B]): Option[B] = map(f) getOrElse None
 
-  // here, B must be a supertype of A
+  // here, B must be a super type of A
   def getOrElse[B >: A](default: => B): B = this match {
     case None => default
     case Some(a) => a
@@ -22,9 +25,13 @@ sealed trait Option[+A] {
     case Some(a) if f(a) => this
     case _ => None
   }
+}
+case class Some[+A](get: A) extends Option[A]
+case object None extends Option[Nothing]
 
+object Option {
   /**
-   * Exercise 4.2: Implement variance in terms of flatmap. if the mean of a seq is m, the variance is the mean of
+   * Exercise 4.2: Implement variance in terms of flatMap. if the mean of a seq is m, the variance is the mean of
    * math.pow(x - m, 2)
    */
   def variance(xs: Seq[Double]): Option[Double] = {
@@ -40,6 +47,17 @@ sealed trait Option[+A] {
     // map the "elements" (there should be only one) to the variance
     mean(xs) flatMap(m => mean(xs.map(x => math.pow(x - m, 2))))
   }
+
+  /**
+   * lift returns a function which maps None to None and applies f to the contents of Some. f need not be aware
+   * of the Option type at all
+   */
+  def lift[A,B](f: A => B): Option[A] => Option[B] = _ map f
+
+  /**
+   * Exercise 4.3: Write a generic function map2 that combines two Option values using a binary function. If either
+   * Option value is None, then the return value is too.
+   */
+  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A,B) => C): Option[C] =
+    a flatMap (aa => b map (bb => f(aa, bb)))
 }
-case class Some[+A](get: A) extends Option[A]
-case object None extends Option[Nothing]
