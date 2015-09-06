@@ -65,4 +65,14 @@ object Either {
     } yield quote(a, b)
 
   def quote(a: Int, b: Int): Double = 5.0
+
+
+  /**
+   * Exercise 4.7: Implement sequence and traverse for Either. These should return the first error encountered, if
+   * there is one
+   */
+  def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] = traverse(es)(x => x)
+
+  def traverse[E, A, B](as: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
+    as.foldRight[Either[E, List[B]]](Right(Nil))((a, b) => f(a).map2(b)(_ :: _))
 }
