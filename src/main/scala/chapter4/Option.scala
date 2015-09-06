@@ -1,5 +1,9 @@
 package chapter4
 
+import chapter3.Cons
+
+import scala.annotation.tailrec
+
 sealed trait Option[+A] {
 
   /**
@@ -66,4 +70,26 @@ object Option {
    */
   def map2[A,B,C](a: Option[A], b: Option[B])(f: (A,B) => C): Option[C] =
     a flatMap(aa => b map (bb => f(aa, bb)))
+
+  /**
+   * Exercise 4.4: Write a function sequence that combines a list of Options into one Option containing a list
+   * of all the same Some values in the original list. If the original list contains None even once, the result
+   * of the function should be None; otherwise the result should be Some with a list of all the values
+   *
+   * Annoyingly, you have to tell foldRight of the type here, otherwise it incorrectly thinks Some(Nil) is something
+   * rubbish
+   */
+  def sequence[A](a: List[Option[A]]): Option[List[A]] =
+    a.foldRight[Option[List[A]]](Some(Nil))((a, b) => map2(a, b)(_ :: _))
+
+  // you can also do it recursively apparently
+  def sequence_rec[A](a: List[Option[A]]): Option[List[A]] = a match {
+    case Nil => Some(Nil)
+    case h :: t => h flatMap(hh => sequence_rec(t) map(hh :: _))
+  }
 }
+
+
+
+
+
