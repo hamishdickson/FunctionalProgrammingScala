@@ -7,14 +7,22 @@ sealed trait Stream[+A] {
    */
   def toList: List[A] = this match {
     case Empty => List();
-    case Cons(h, t) => h() :: t().toList // don't know why I need brackets here?
+    case Cons(h, t) => h() :: t().toList // don't know why I need brackets here? (the h and t)
   }
 
 
   def toListTheirSolution: List[A] = this match {
-    case Cons(h, t) => h() :: t().toList // don't know why I need brackets here?
-    case _ => List(); // ? what else is there than empty?
+    case Cons(h, t) => h() :: t().toList // don't know why I need brackets here? (the h and t)
+    case _ => List() // ? what else is there than empty?
   }
+
+  /**
+   * Exercise 5.2: Write take(n) which takes the first n elements of s stream and drop(n) which drops the last
+   * n elements of a stream
+   */
+  def take(n: Int): Stream[A] = ???
+
+  def drop(n: Int): Stream[A] = ???
 }
 
 case object Empty extends Stream[Nothing]
