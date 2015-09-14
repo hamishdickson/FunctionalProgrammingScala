@@ -30,6 +30,26 @@ sealed trait Stream[+A] {
     case Cons(_, t) if n > 0 => t().drop(n - 1)
     case _ => this
   }
+
+  /**
+   * Exists - checks if an element exists in the stream
+   */
+  def exists(p: A => Boolean): Boolean = this match {
+    case Cons(h, t) => p(h()) || t().exists(p) // note this bit - don't actually ever eval t() if p(h()) true
+    case _ => false
+  }
+
+  /**
+   * Lazy foldRight
+   *
+   * note z and the second parameter of f are now non-strict
+   */
+  def foldRight[B](z: => B)(f: (A, => B) => B): B = this match {
+    case Cons(h, t) => f(h(), t().foldRight(z)(f))
+    case _ => z
+  }
+
+  def existsFoldRight(p: A => Boolean): Boolean = foldRight(false)((a, b) => p(a) || b)
 }
 
 case object Empty extends Stream[Nothing]
