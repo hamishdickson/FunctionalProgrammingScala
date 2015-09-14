@@ -56,6 +56,11 @@ sealed trait Stream[+A] {
    * predicate. The impl should terminate the traversal as soon as it encounters a non-matching value
    */
   def forAll(p: A => Boolean): Boolean = foldRight(true)((a, b) => p(a) && b)
+
+  /**
+   * Exercise 5.5: Use foldRight to implement takeWhile
+   */
+  def takeWhile(p: A => Boolean): Stream[A] = foldRight(Stream.empty[A])((a, b) => if (p(a)) Stream.cons(a, b) else Stream.empty)
 }
 
 case object Empty extends Stream[Nothing]
