@@ -162,4 +162,9 @@ object Stream {
     case Some((h, s)) => cons(h, unfold(s)(f))
     case None => empty
   }
+
+  /**
+   * Exercise 5.12: Write fibs, from, constant and ones in terms of unfold
+   */
+  val onesUnfold: Stream[Int] = unfold(1)(_ => Some(1, 1))
 }
