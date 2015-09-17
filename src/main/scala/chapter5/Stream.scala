@@ -103,6 +103,14 @@ sealed trait Stream[+A] {
    */
   def from(n: Int): Stream[Int] = Stream.cons(n, from(n + 1))
 
+  /**
+   * Exercise 5.10: Write a function fib, that generalises the infinite stream of fibonacci numbers
+   */
+  val fib: Stream[Int] = {
+    def loop(a: Int, b: Int): Stream[Int] =
+      Stream.cons(a, loop(b, a + 1))
+    loop(0, 1)
+  }
 }
 
 case object Empty extends Stream[Nothing]
