@@ -83,34 +83,6 @@ sealed trait Stream[+A] {
 
   def flatMap[B](f: A => Stream[B]): Stream[B] =
     foldRight(Stream.empty[B])((a, b) => f(a) append b)
-
-  /**
-   * Exercise 5.8: Generalise ones to the function constant, which returns an infinite Stream a given value
-   */
-  val ones: Stream[Int] = Stream.cons(1, ones)
-
-  // my attempt
-  def constant[A](a: A): Stream[A] = Stream.cons(a, constant(a))
-
-  // better since it doesn't eval stuff over and over
-  def constantLazy[A](a: A): Stream[A] = {
-    lazy val tail: Stream[A] = Cons(() => a, () => tail)
-    tail
-  }
-
-  /**
-   * Exercise 5.9: Write a function that generalizes an infinite Stream of integers, starting from n
-   */
-  def from(n: Int): Stream[Int] = Stream.cons(n, from(n + 1))
-
-  /**
-   * Exercise 5.10: Write a function fib, that generalises the infinite stream of fibonacci numbers
-   */
-  val fib: Stream[Int] = {
-    def loop(a: Int, b: Int): Stream[Int] =
-      Stream.cons(a, loop(b, a + 1))
-    loop(0, 1)
-  }
 }
 
 case object Empty extends Stream[Nothing]
@@ -153,4 +125,41 @@ object Stream {
    */
   def apply[A](as: A*): Stream[A] =
     if (as.isEmpty) empty else cons(as.head, apply(as.tail: _*))
+
+  /**
+   * Exercise 5.8: Generalise ones to the function constant, which returns an infinite Stream a given value
+   */
+  val ones: Stream[Int] = cons(1, ones)
+
+  // my attempt
+  def constant[A](a: A): Stream[A] = cons(a, constant(a))
+
+  // better since it doesn't eval stuff over and over
+  def constantLazy[A](a: A): Stream[A] = {
+    lazy val tail: Stream[A] = Cons(() => a, () => tail)
+    tail
+  }
+
+  /**
+   * Exercise 5.9: Write a function that generalizes an infinite Stream of integers, starting from n
+   */
+  def from(n: Int): Stream[Int] = cons(n, from(n + 1))
+
+  /**
+   * Exercise 5.10: Write a function fib, that generalises the infinite stream of fibonacci numbers
+   */
+  val fib: Stream[Int] = {
+    def loop(a: Int, b: Int): Stream[Int] =
+      cons(a, loop(b, a + 1))
+    loop(0, 1)
+  }
+
+  /**
+   * Exercise 5.11: Write a function called unfold. Taking an initial state and a function for producing both the
+   * next state and the next value in the generated stream
+   */
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = f(z) match {
+    case Some((h, s)) => cons(h, unfold(s)(f))
+    case None => empty
+  }
 }
