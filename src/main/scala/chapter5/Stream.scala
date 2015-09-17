@@ -83,6 +83,20 @@ sealed trait Stream[+A] {
 
   def flatMap[B](f: A => Stream[B]): Stream[B] =
     foldRight(Stream.empty[B])((a, b) => f(a) append b)
+
+  /**
+   * Exercise 5.8: Generalise ones to the function constant, which returns an infinite Stream a given value
+   */
+  val ones: Stream[Int] = Stream.cons(1, ones)
+
+  // my attempt
+  def constant[A](a: A): Stream[A] = Stream.cons(a, constant(a))
+
+  // better since it doesn't eval stuff over and over
+  def constantLazy[A](a: A): Stream[A] = {
+    lazy val tail: Stream[A] = Cons(() => a, () => tail)
+    tail
+  }
 }
 
 case object Empty extends Stream[Nothing]
