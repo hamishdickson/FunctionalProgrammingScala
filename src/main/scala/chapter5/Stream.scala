@@ -97,6 +97,12 @@ sealed trait Stream[+A] {
     lazy val tail: Stream[A] = Cons(() => a, () => tail)
     tail
   }
+
+  /**
+   * Exercise 5.9: Write a function that generalizes an infinite Stream of integers, starting from n
+   */
+  def from(n: Int): Stream[Int] = Stream.cons(n, from(n + 1))
+
 }
 
 case object Empty extends Stream[Nothing]
