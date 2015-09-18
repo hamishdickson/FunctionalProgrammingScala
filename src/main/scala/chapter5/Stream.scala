@@ -167,4 +167,17 @@ object Stream {
    * Exercise 5.12: Write fibs, from, constant and ones in terms of unfold
    */
   val onesUnfold: Stream[Int] = unfold(1)(_ => Some(1, 1))
+
+  /*
+  I didn't get this...
+
+    Scala provides shorter syntax when the first action of a function literal is to match on an expression.
+    The function passed to `unfold` in `fibsViaUnfold` is equivalent to `p => p match { case (f0,f1) => ... }`,
+    but we avoid having to choose a name for `p`, only to pattern match on it.
+   */
+  val fibsUnfold: Stream[Int] = unfold((1, 1)){ case (a, b) => Some(b, (b, a+1)) }
+
+  def fromUnfold(n: Int): Stream[Int] = unfold(n)(_ => Some((n, n+1)))
+
+  def constant[A](a: A): Stream[A] = unfold(a)(_ => Some((a, a)))
 }
