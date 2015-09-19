@@ -60,7 +60,8 @@ sealed trait Stream[+A] {
   /**
    * Exercise 5.5: Use foldRight to implement takeWhile
    */
-  def takeWhile(p: A => Boolean): Stream[A] = foldRight(Stream.empty[A])((a, b) => if (p(a)) Stream.cons(a, b) else Stream.empty)
+  def takeWhile(p: A => Boolean): Stream[A] =
+    foldRight(Stream.empty[A])((a, b) => if (p(a)) Stream.cons(a, b) else Stream.empty)
 
   /**
    * Exercise 5.6: Hard - implement headOption
@@ -83,6 +84,49 @@ sealed trait Stream[+A] {
 
   def flatMap[B](f: A => Stream[B]): Stream[B] =
     foldRight(Stream.empty[B])((a, b) => f(a) append b)
+
+
+  /**
+   * Exercise 5.13: Use unfold to implement map, take, takeWhile, zipWith  and zipAll. zipAll should continue
+   * the traversal as long as either stream has more elements - it uses Option to indicate whether each stream
+   * has been exhausted
+   */
+  def mapViaUnfold[B](f: A => B): Stream[B] =
+    Stream.unfold(this) {
+      case Cons(h,t) => Some((f(h()), t()))
+      case _ => None
+    }
+
+  def takeViaUnfold(n: Int): Stream[A] =
+    Stream.unfold((this, n)){
+      case (Cons(h,t), 1) => Some((h(), (Stream.empty, 0)))
+      case (Cons(h,t), n) if n > 1 => Some((h(), (t(), n-1)))
+      case _ => None
+    }
+
+  def takeWhileViaUnfold(p: A => Boolean): Stream[A] =
+    Stream.unfold(this) {
+      case Cons(h,t) if p(h()) => Some((h(), t()))
+      case _ => None
+    }
+
+  def zipWithViaUnfold[B,C](s2: Stream[B])(f: (A,B) => C): Stream[C] =
+    Stream.unfold((this, s2)) {
+      case (Cons(h1,t1), Cons(h2,t2)) =>
+        Some((f(h1(), h2()), (t1(), t2())))
+      case _ => None
+    }
+
+  def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] =
+    zipWithAll(s2)((_,_))
+
+  def zipWithAll[B, C](s2: Stream[B])(f: (Option[A], Option[B]) => C): Stream[C] =
+    Stream.unfold((this, s2)) {
+      case (Empty, Empty) => None
+      case (Cons(h, t), Empty) => Some(f(Some(h()), Option.empty[B]) -> (t(), Stream.empty[B]))
+      case (Empty, Cons(h, t)) => Some(f(Option.empty[A], Some(h())) -> (Stream.empty[A] -> t()))
+      case (Cons(h1, t1), Cons(h2, t2)) => Some(f(Some(h1()), Some(h2())) -> (t1() -> t2()))
+    }
 }
 
 case object Empty extends Stream[Nothing]
