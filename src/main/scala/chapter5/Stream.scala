@@ -133,10 +133,20 @@ sealed trait Stream[+A] {
    * one Stream is a prefix of another. For instance, Stream(1, 2, 3) startsWith Stream(1, 2) would be true
    */
   def startsWith[A](s: Stream[A]): Boolean =
-    zipAll(s).takeWhile(!_._2.isEmpty) forAll {
+    zipAll(s).takeWhile(_._2.isDefined) forAll {
       case (h,h2) => h == h2
     }
-  
+
+  /**
+   * Exercise 5.15: Implement tails using unfold. For a given Stream, tails returns the Stream of suffixes of
+   * the input seq, starting with the original Stream. For example, given Stream(1, 2, 3), it would return
+   * Stream(Stream(1, 2, 3), Stream(2, 3), Stream(3), Stream())
+   */
+  def tails: Stream[Stream[A]] =
+    Stream.unfold(this) {
+      case Empty => None
+      case s => Some((s, s drop 1))
+    } append Stream(Stream.empty)
 }
 
 case object Empty extends Stream[Nothing]
