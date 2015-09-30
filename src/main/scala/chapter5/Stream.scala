@@ -147,6 +147,13 @@ sealed trait Stream[+A] {
       case Empty => None
       case s => Some((s, s drop 1))
     } append Stream(Stream.empty)
+
+  /**
+   * Exercise 5.16: Hard. Generalise tails to the function scanRight, which is like a foldRight that returns stream of
+   * the intermediate results
+   *
+   * todo ... solve...
+   */
 }
 
 case object Empty extends Stream[Nothing]
