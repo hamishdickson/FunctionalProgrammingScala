@@ -250,5 +250,5 @@ object Stream {
 
   def fromUnfold(n: Int): Stream[Int] = unfold(n)(_ => Some((n, n+1)))
 
-  def constant[A](a: A): Stream[A] = unfold(a)(_ => Some((a, a)))
+  def constant1[A](a: A): Stream[A] = unfold(a)(_ => Some((a, a)))
 }
