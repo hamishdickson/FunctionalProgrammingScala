@@ -36,15 +36,23 @@ case class SimpleRNG(seed: Long) extends RNG {
   /**
    * Exercise 6.1: Write a function that uses RNG.nextInt to generate a random integer between 0 and Int.maxValue (inc)
    * Make sure to handle the corner case when nextInt returns Int.minValue, which doesn't have a non-neg counterpart
-   *
-   * Note: Their solution is a bit different than mine - they add one to neg numbers and * by -1
    */
   def nonNegativeInt(rng: RNG): (Int, RNG) = {
     val (i1, rng1) = rng.nextInt
 
     (i1, rng1) match {
-      case (Int.MinValue, r) => (Int.MaxValue, r)
+      case (v, r) if v < 0 => (Math.abs(v + 1), r)
       case (v, r) => (Math.abs(v), r)
     }
+  }
+
+  /**
+   * Exercise 6.2: Write a function to generate a Double between 0 and 1, not inc 1. Note: you can use Int.maxValue
+   * to obtain the max positive integer value, and you can use x.toDouble to convert an x: Int to Double
+   */
+  def double(rng: RNG): (Double, RNG) = {
+    val (i1, rng1) = nonNegativeInt(rng)
+
+    (i1 / Int.MaxValue.toDouble, rng1)
   }
 }

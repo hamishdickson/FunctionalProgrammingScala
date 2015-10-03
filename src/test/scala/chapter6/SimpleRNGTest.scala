@@ -13,5 +13,11 @@ class SimpleRNGTest extends FlatSpec with Matchers {
 
     n1 should be (n3)
     rng2 should be (rng4)
+
+    val (n4, rng5) = rng.double(rng)
+
+    // need a quick test type thing here
+    n4 >= 0 should be (true)
+    n4 < 1 should be (true)
   }
 }
