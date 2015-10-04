@@ -6,7 +6,7 @@ trait RNG {
 
 /**
   * RNG: a purely functional random number generator
-  */
+ */
 case class SimpleRNG(seed: Long) extends RNG {
   override def nextInt: (Int, RNG) = {
     val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
@@ -16,7 +16,7 @@ case class SimpleRNG(seed: Long) extends RNG {
   }
 
   /**
-   * returns a pair of the same number
+    * returns a pair of the same number
    */
   def randomSamePair(rng: RNG): (Int, Int)  = {
     val (i1, _) = rng.nextInt
@@ -25,7 +25,7 @@ case class SimpleRNG(seed: Long) extends RNG {
   }
 
   /**
-   * returns a pair of random numbers
+    * returns a pair of random numbers
    */
   def randomPair(rng: RNG): ((Int, Int), RNG) = {
     val (i1, rng2) = rng.nextInt
@@ -34,7 +34,7 @@ case class SimpleRNG(seed: Long) extends RNG {
   }
 
   /**
-   * Exercise 6.1: Write a function that uses RNG.nextInt to generate a random integer between 0 and Int.maxValue (inc)
+    * Exercise 6.1: Write a function that uses RNG.nextInt to generate a random integer between 0 and Int.maxValue (inc)
    * Make sure to handle the corner case when nextInt returns Int.minValue, which doesn't have a non-neg counterpart
    */
   def nonNegativeInt(rng: RNG): (Int, RNG) = {
@@ -47,7 +47,7 @@ case class SimpleRNG(seed: Long) extends RNG {
   }
 
   /**
-   * Exercise 6.2: Write a function to generate a Double between 0 and 1, not inc 1. Note: you can use Int.maxValue
+    * Exercise 6.2: Write a function to generate a Double between 0 and 1, not inc 1. Note: you can use Int.maxValue
    * to obtain the max positive integer value, and you can use x.toDouble to convert an x: Int to Double
    */
   def double(rng: RNG): (Double, RNG) = {
@@ -57,7 +57,7 @@ case class SimpleRNG(seed: Long) extends RNG {
   }
 
   /**
-   * Exercise 6.3: Write functions to generate an (Int, Double) pair, a (Double, Int) pair, and a
+    * Exercise 6.3: Write functions to generate an (Int, Double) pair, a (Double, Int) pair, and a
    * (Double, Double, Double) 3-tuple. You should be able to reuse the functions you've already written
    */
   def intDouble(rng: RNG): ((Int, Double), RNG) = {
@@ -82,7 +82,7 @@ case class SimpleRNG(seed: Long) extends RNG {
   }
 
   /**
-   * Exercise 6.4: Write a function to generate a list of random integers
+    * Exercise 6.4: Write a function to generate a list of random integers
    */
   def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
     if (count == 0) (List(), rng)
@@ -92,4 +92,34 @@ case class SimpleRNG(seed: Long) extends RNG {
       (x :: xs, r2)
     }
   }
+
+  /**
+   * We seem to do this a lot - create a type alias to describe it better
+   *
+   * this is a "state action" -> something that transforms a state. Since it's repetitive to pass along a state ourselves
+   * we want our combinators (combinations of state actions) to pass along the state
+   */
+  type Rand[+A] = RNG => (A, RNG)
+
+  /**
+   * with Rand, we can now turn methods such as nextInt into values of this type
+   */
+  val int: Rand[Int] = _.nextInt
+
+  /**
+   * passes the RNG state through without using it
+   */
+  def unit[A](a: A): Rand[A] = rng => (a, rng)
+
+  /**
+   * map for transforming the output of a state action without modifying the state itself. Remember Rand[A] is just
+   * a type alias for a function of type RNG => (A, RNG), so this is just a kind of function composition
+   */
+  def map[A,B](s: Rand[A])(f: A => B): Rand[B] =
+    rng => {
+      val (a, rng2) = s(rng)
+      (f(a), rng2)
+    }
+
+  def nonNegativeEven: Rand[Int] = map(nonNegativeInt)(i => i - i % 2)
 }
