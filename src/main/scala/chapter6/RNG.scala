@@ -129,4 +129,16 @@ case class SimpleRNG(seed: Long) extends RNG {
   val doubleViaMap: Rand[Double] =
     map(nonNegativeInt)(_ / Int.MaxValue.toDouble)
 
+  /**
+   * Exercise 6.6: Write an implementation of map2 using the following signature. This function takes 2 actions
+   * ra and rb and a function f for combining their results and returns a new action that combines them
+   */
+  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A,B) => C): Rand[C] =
+    rng => {
+      val (a, rng2) = ra(rng)
+      val (b, rng3) = rb(rng2)
+
+      (f(a,b), rng3)
+    }
+
 }
