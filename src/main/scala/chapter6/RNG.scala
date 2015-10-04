@@ -122,4 +122,11 @@ case class SimpleRNG(seed: Long) extends RNG {
     }
 
   def nonNegativeEven: Rand[Int] = map(nonNegativeInt)(i => i - i % 2)
+
+  /**
+   * Exercise 6.5: Use map to reimplement double in a more elegant way
+   */
+  val doubleViaMap: Rand[Double] =
+    map(nonNegativeInt)(_ / Int.MaxValue.toDouble)
+
 }
