@@ -160,4 +160,20 @@ case class SimpleRNG(seed: Long) extends RNG {
    */
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
     fs.foldRight(unit(List[A]()))((f, acc) => map2(f, acc)(_ :: _))
+
+  /**
+   * Exercise 6.8: Implement flatMap and then use it to implement nonNegativeLessThan
+   */
+  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
+    rng => {
+      val (a, r1) = f(rng)
+      g(a)(r1)
+    }
+
+  def nonNegativeLessThanFlatMap(n: Int): Rand[Int] = {
+    flatMap(nonNegativeInt){ i =>
+      val mod = i % n
+      if (i + (n-1) - mod >= 0) unit(mod) else nonNegativeLessThanFlatMap(n)
+    }
+  }
 }
