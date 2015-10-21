@@ -64,4 +64,16 @@ object Par {
    * convert any function A => B to one that evaluates it's result async
    */
   def asyncF[A,B](f: A => B): A => Par[B] = a => lazyUnit(f(a))
+
+  /**
+   * So this looks like a massive hack - I'd like to sort my list of ints, but I don't really have a function to apply
+   * in map2 - so pass a thunk type thing.. it looks like it should work though
+   */
+  def sortPar(parList: Par[List[Int]]): Par[List[Int]] = map2(parList, unit(()))((a, _) => a.sorted)
+
+  /**
+   * using the idea behind sortPar, we can lift any function A => B to be Par[A] => Par[B]
+   */
+  def map[A,B](pa: Par[A])(f: A => B): Par[B] =
+    map2(pa, unit(()))((a, _) => f(a))
 }
