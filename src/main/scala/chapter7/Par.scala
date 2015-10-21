@@ -2,6 +2,11 @@ package chapter7
 
 import java.util.concurrent.{Callable, TimeUnit, Future, ExecutorService}
 
+/**
+ * A note on Future - Future isn't functional in itself, but we still are purely functional - we are keeping our
+ * API functional - see part 4 for more details
+ */
+
 trait Par[+A]
 
 object Par {
@@ -30,6 +35,12 @@ object Par {
    * `map2` doesn't evaluate the call to `f` in a separate logical thread, in accord with our design choice of having
    * `fork` be the sole function in the API for controlling parallelism. We can always do `fork(map2(a,b)(f))`
    * if we want the evaluation of `f` to occur in a separate thread.
+   *
+   * Note (and exercise 7.3): This implementation of `map2` does _not_ respect timeouts. It simply passes the
+   * `ExecutorService` on to both `Par` values, waits for the results of the Futures `af` and `bf`, applies `f` to them,
+   * and wraps them in a `UnitFuture`. In order to respect timeouts, we'd need a new `Future` implementation that
+   * records the amount of time spent evaluating `af`, then subtracts that time from the available time allocated for
+   * evaluating `bf`.
    */
   def map2[A,B,C](a: Par[A], b: Par[B])(f: (A,B) => C): Par[C] =
     (es: ExecutorService) => {
@@ -38,8 +49,6 @@ object Par {
       UnitFuture(f(af.get, bf.get))
     }
 
-
-  
   // marks a computation for concurrent evaluation by run
   def fork[A](a: => Par[A]): Par[A] =
     es => es.submit(new Callable[A] {
@@ -49,4 +58,10 @@ object Par {
   def lazyUnit[A](a: => A): Par[A] = fork(unit(a))
   // fully evaluates a given Par, spawning parallel computations as requested by for and extracting the resulting value
   def run[A](a: Par[A]): A = ???
+
+  /**
+   * Exercise 7.4: This API already enables  a rich set of operations. Here's a simple example: using lazyUnit, write a function to
+   * convert any function A => B to one that evaluates it's result async
+   */
+  def asyncF[A,B](f: A => B): A => Par[B] = a => lazyUnit(f(a))
 }
