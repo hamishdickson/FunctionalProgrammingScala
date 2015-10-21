@@ -69,11 +69,31 @@ object Par {
    * So this looks like a massive hack - I'd like to sort my list of ints, but I don't really have a function to apply
    * in map2 - so pass a thunk type thing.. it looks like it should work though
    */
-  def sortPar(parList: Par[List[Int]]): Par[List[Int]] = map2(parList, unit(()))((a, _) => a.sorted)
+  def sortPar(parList: Par[List[Int]]): Par[List[Int]] =
+    map2(parList, unit(()))((a, _) => a.sorted)
 
   /**
    * using the idea behind sortPar, we can lift any function A => B to be Par[A] => Par[B]
    */
   def map[A,B](pa: Par[A])(f: A => B): Par[B] =
     map2(pa, unit(()))((a, _) => f(a))
+
+  def sortPar2(parList: Par[List[Int]]): Par[List[Int]] =
+    map(parList)(_.sorted)
+
+  /**
+   * Can we map over a list in parallel? This would need to combine N parallel computations
+   */
+  def parMap[A,B](ps: List[A])(f: A => B): Par[List[B]] = {
+    val fbs: List[Par[B]] = ps.map(asyncF(f))
+  }
+
+  /**
+   * Exercise 7.5: Write sequence - needs to convert List[Par[A]] to Par[List[A]]
+   *
+   * I nearly got there with this - I didn't get the unit part though (just tried List()) - which was silly, it wouldn't
+   * have the right type without it
+   */
+  def sequence[A](ps: List[Par[A]]): Par[List[A]] =
+    ps.foldRight[Par[List[A]]](unit(List()))((a, b) => map2(a, b)(_ :: _))
 }
