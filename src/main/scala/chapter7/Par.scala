@@ -83,6 +83,8 @@ object Par {
 
   /**
    * Can we map over a list in parallel? This would need to combine N parallel computations
+   *
+   * so when parMap is called, it will return immediately, then when we call run it will fork a bunch of async tasks
    */
   def parMap[A,B](ps: List[A])(f: A => B): Par[List[B]] = {
     val fbs: List[Par[B]] = ps.map(asyncF(f))
@@ -99,4 +101,13 @@ object Par {
    */
   def sequence[A](ps: List[Par[A]]): Par[List[A]] =
     ps.foldRight[Par[List[A]]](unit(List()))((a, b) => map2(a, b)(_ :: _))
+
+  /**
+   * Exercise 7.6: Implement parFilter, which filters elements of a list in parallel
+   */
+  def parFilter[A](as: List[A])(f: A => Boolean): Par[List[A]] = {
+    val pars: List[Par[List[A]]] = as map asyncF((a: A) => if (f(a)) List(a) else List())
+
+    map(sequence(pars))(_.flatten)
+  }
 }
