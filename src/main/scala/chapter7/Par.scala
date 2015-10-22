@@ -86,6 +86,7 @@ object Par {
    */
   def parMap[A,B](ps: List[A])(f: A => B): Par[List[B]] = {
     val fbs: List[Par[B]] = ps.map(asyncF(f))
+    sequence(fbs)
   }
 
   /**
@@ -93,6 +94,8 @@ object Par {
    *
    * I nearly got there with this - I didn't get the unit part though (just tried List()) - which was silly, it wouldn't
    * have the right type without it
+   *
+   * Note: you can find better implementations here: https://github.com/fpinscala/fpinscala/blob/8440f61e54dcd60087d5fdd6a0d3fb73934abed0/answers/src/main/scala/fpinscala/parallelism/Par.scala
    */
   def sequence[A](ps: List[Par[A]]): Par[List[A]] =
     ps.foldRight[Par[List[A]]](unit(List()))((a, b) => map2(a, b)(_ :: _))
