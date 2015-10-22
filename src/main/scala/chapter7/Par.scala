@@ -110,4 +110,7 @@ object Par {
 
     map(sequence(pars))(_.flatten)
   }
+
+  def delay[A](fa: => Par[A]): Par[A] =
+    es => fa(es)
 }
