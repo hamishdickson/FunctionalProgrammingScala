@@ -40,5 +40,32 @@ object Nonblocking {
 
     def eval(es: ExecutorService)(r: => Unit): Unit =
       es.submit(new Callable[Unit] { def call = r })
+
+    /**
+     * map2 is much harder - you have to use actors
+     *
+     * annoyingly, this book was written before actors were removed and put into akka
+     */
+/*    def map2[A,B,C](p: Par[A], p2: Par[B])(f: (A,B) => C): Par[C] =
+      es => new Future[C] {
+        def apply(cb: C => Unit): Unit = {
+          var ar: Option[A] = None
+          var br: Option[B] = None
+          // this implementation is a little too liberal in forking of threads -
+          // it forks a new logical thread for the actor and for stack-safety,
+          // forks evaluation of the callback `cb`
+          val combiner = Actor[Either[A,B]](es) {
+            case Left(a) =>
+              if (br.isDefined) eval(es)(cb(f(a,br.get)))
+              else ar = Some(a)
+            case Right(b) =>
+              if (ar.isDefined) eval(es)(cb(f(ar.get,b)))
+              else br = Some(b)
+          }
+          p(es)(a => combiner ! Left(a))
+          p2(es)(b => combiner ! Right(b))
+        }
+      }*/
+
   }
 }
