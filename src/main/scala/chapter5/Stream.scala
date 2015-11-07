@@ -168,7 +168,7 @@ object Stream {
   /**
    * A smart constructor for creating a non-empty stream
    *
-   * Typcially want to cache the values of a Cons node, once they are forced. If we use the Cons data constructor
+   * Typically want to cache the values of a Cons node, once they are forced. If we use the Cons data constructor
    * directly code can be computed twice.
    *
    * Avoid this problem with smart constructors => a function for constructing a data type other than the one used
