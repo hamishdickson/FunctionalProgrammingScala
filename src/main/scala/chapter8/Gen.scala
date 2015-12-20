@@ -7,7 +7,7 @@ trait Prop {
 
 
 object Gen {
-  /**
+/*  /**
     * Generates a list of type A
     */
   def listOf[A](a: Gen[A]): Gen[List[A]]
@@ -15,5 +15,5 @@ object Gen {
   /**
     * Creates n elements in a listOf
     */
-  def listOfN[A](n: Int, a: Gen[A]): Gen[List[A]]
+  def listOfN[A](n: Int, a: Gen[A]): Gen[List[A]]*/
 }
