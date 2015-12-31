@@ -1,5 +1,7 @@
 package chapter9
 
+import org.scalacheck._
+
 /**
   * Let's create a Parser!
   *
@@ -16,7 +18,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     *
     * should satisfy `run(char(c))(c.toString) == Right(c)`
     */
-  def char(c: Char): Parser[Char]
+  def char(c: Char): Parser[Char] = string(c.toString) map (_.charAt(0))
 
   /**
     * We also need something to run a parser
@@ -62,8 +64,31 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     */
   def listOfN[A](n: Int, p: Parser[A]): Parser[List[A]]
 
+  val numA: Parser[Int] = char('a').many.map(_.size)
+
+  /**
+    * always succeeds with the value a
+    */
+  def succeed[A](a: A): Parser[A] = string("") map {_ => a}
+
   case class ParserOps[A](p: Parser[A]) {
     def |[B >: A](p2: Parser[B]): Parser[B] = self.or(p,p2)
     def or[B >: A](p2: => Parser[B]): Parser[B] = self.or(p,p2)
+
+    def many(p: Parser[A]): Parser[A]
+    def map[B](f: A => B): Parser[B]
+  }
+
+  /**
+    * Somewhere to keep laws about our functions
+    *
+    * note, the book uses stuff from chapter8 here, I'd like to use scalacheck
+    */
+  object Laws {
+    def equal[A](p1: Parser[A], p2: Parser[A])(in: Gen[String]): Prop = Prop.forAll(in)(s => run(p1)(s) == run(p2)(s))
+
+    def mapLaw[A](p: Parser[A])(in: Gen[String]): Prop = equal(p, p.map(a => a))(in)
+
+    def succeedLaw[A](p: Parser[A], a: Parser[A])(in: Gen[String]): Prop = equal(succeed(p), a)(in)
   }
 }
