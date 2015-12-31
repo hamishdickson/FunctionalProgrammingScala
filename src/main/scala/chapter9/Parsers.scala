@@ -64,7 +64,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     */
   def listOfN[A](n: Int, p: Parser[A]): Parser[List[A]]
 
-  val numA: Parser[Int] = char('a').many.map(_.size)
+  //val numA: Parser[Int] = char('a').many.map(_.size)
 
   /**
     * always succeeds with the value a
@@ -75,8 +75,8 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     def |[B >: A](p2: Parser[B]): Parser[B] = self.or(p,p2)
     def or[B >: A](p2: => Parser[B]): Parser[B] = self.or(p,p2)
 
-    def many(p: Parser[A]): Parser[A]
-    def map[B](f: A => B): Parser[B]
+    def many(p: Parser[A]): Parser[A] = ???
+    def map[B](f: A => B): Parser[B] = ???
   }
 
   /**

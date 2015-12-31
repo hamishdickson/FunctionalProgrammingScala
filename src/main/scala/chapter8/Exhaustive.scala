@@ -1,3 +1,4 @@
+/*
 package chapter8
 /*
 This source file contains the answers to the last two exercises in the section
@@ -412,3 +413,4 @@ trait SGen[+A] {
     case (Unsized(g), Sized(g2)) => Sized(n => g ** g2(n))
   }
 }
+*/
