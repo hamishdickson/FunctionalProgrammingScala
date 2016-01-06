@@ -64,12 +64,29 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     */
   def listOfN[A](n: Int, p: Parser[A]): Parser[List[A]]
 
-  //val numA: Parser[Int] = char('a').many.map(_.size)
 
   /**
     * always succeeds with the value a
     */
   def succeed[A](a: A): Parser[A] = string("") map {_ => a}
+
+  /**
+    * should obey:
+    * run(slice(('a'|'b').many))("aaba") results in Right("aaba")
+    */
+  def slice[A](p: Parser[A]): Parser[String]
+
+  /**
+    * so our char parser becomes (doesn't compile as yet)
+    */
+  //val numA: Parser[Int] = char('a').many.slice.map(_.size)
+
+    /**
+      * one or many, note this feels a lot like it should be p followed by many(p), so create product
+      */
+    def many1[A](p: Parser[A]): Parser[List[A]] = ???
+
+    def product[A,B](p: Parser[A], p2: Parser[B]): Parser[(A,B)] = ???
 
   case class ParserOps[A](p: Parser[A]) {
     def |[B >: A](p2: Parser[B]): Parser[B] = self.or(p,p2)
