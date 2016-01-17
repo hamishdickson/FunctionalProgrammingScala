@@ -122,5 +122,10 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     def mapLaw[A](p: Parser[A])(in: Gen[String]): Prop = equal(p, p.map(a => a))(in)
 
     def succeedLaw[A](p: Parser[A], a: Parser[A])(in: Gen[String]): Prop = equal(succeed(p), a)(in)
+
+    // Exercise 9.2: generate laws for product: actually don't know if this is true
+    def productLaw_commutes[A,B](p: Parser[A], p2: Parser[B])(in: Gen[String]): Prop = equal(product(p, p2), product(p2, p))(in)
+
+
   }
 }
