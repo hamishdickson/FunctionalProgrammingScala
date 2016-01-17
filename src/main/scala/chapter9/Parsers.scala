@@ -46,7 +46,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     * `run(or(string("abra"), string("cadabra")))("abra") == Right("abra")`
     * `run(or(string("abra"), string("cadabra")))("cadabra") == Right("cadabra")`
     */
-  def or[A](s1: Parser[A], s2: Parser[A]): Parser[A]
+  def or[A](s1: Parser[A], s2: Parser[A]): Parser[A] = ???
 
   /**
     * With these two (and the newly implicted string) Scala will automatically promote String to a Parser and we will
@@ -83,9 +83,13 @@ trait Parsers[ParseError, Parser[+_]] { self =>
   //val numA: Parser[Int] = char('a').many.slice.map(_.size)
 
   /**
+    * Exercise 9.3: many in terms of or, map2 and succeed
+    * many(p) = tries running p, followed by many p.. until fails, then appends empty
+    */
+  def many[A](p: Parser[A]): Parser[List[A]] = map2(p, many(p))(_ :: _) | succeed(List())
+  /**
     * one or many, note this feels a lot like it should be p followed by many(p), so create product
     */
-  def many[A](p: Parser[A]): Parser[List[A]] = ???
   def many1[A](p: Parser[A]): Parser[List[A]] = ???
 
   def product[A,B](p: Parser[A], p2: Parser[B]): Parser[(A,B)] = ???
@@ -123,9 +127,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
 
     def succeedLaw[A](p: Parser[A], a: Parser[A])(in: Gen[String]): Prop = equal(succeed(p), a)(in)
 
-    // Exercise 9.2: generate laws for product: actually don't know if this is true
+    // Exercise 9.2: generate laws for product: actually don't think this is true for parsers, but would be for normal product
     def productLaw_commutes[A,B](p: Parser[A], p2: Parser[B])(in: Gen[String]): Prop = equal(product(p, p2), product(p2, p))(in)
-
-
   }
 }
