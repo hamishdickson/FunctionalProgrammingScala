@@ -1,5 +1,6 @@
 package chapter9
 
+import chapter9.Parsers
 import org.scalacheck._
 
 /**
@@ -81,19 +82,32 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     */
   //val numA: Parser[Int] = char('a').many.slice.map(_.size)
 
-    /**
-      * one or many, note this feels a lot like it should be p followed by many(p), so create product
-      */
-    def many1[A](p: Parser[A]): Parser[List[A]] = ???
+  /**
+    * one or many, note this feels a lot like it should be p followed by many(p), so create product
+    */
+  def many[A](p: Parser[A]): Parser[List[A]] = ???
+  def many1[A](p: Parser[A]): Parser[List[A]] = ???
 
-    def product[A,B](p: Parser[A], p2: Parser[B]): Parser[(A,B)] = ???
+  def product[A,B](p: Parser[A], p2: Parser[B]): Parser[(A,B)] = ???
+
+  /**
+    * Exercise 9.1: using product, implement map2 and then use this to implement many1 in terms of many. Note, we could
+    * also have chosen to make this primitive
+    *
+    * note: I had this worked out for ages, but couldn't get it to type check - turns out you need .tupled on f here,
+    * didn't know that was a thing, but hey..
+    */
+  def map2[A,B,C](p: Parser[A], p2: Parser[B])(f: (A,B) => C): Parser[C] =
+    product(p, p2) map f.tupled
+
+  def many1_map2[A](p: Parser[A]): Parser[List[A]] = map2(p, many(p))(_ :: _)
 
   case class ParserOps[A](p: Parser[A]) {
     def |[B >: A](p2: Parser[B]): Parser[B] = self.or(p,p2)
     def or[B >: A](p2: => Parser[B]): Parser[B] = self.or(p,p2)
     def **[B >: A](p: Parser[A], p2: Parser[B]) = self.product(p,p2)
 
-    def many(p: Parser[A]): Parser[A] = ???
+    def many = self.many(p)
     def map[B](f: A => B): Parser[B] = ???
   }
 
