@@ -88,14 +88,21 @@ trait Parsers[ParseError, Parser[+_]] { self =>
   /**
     * Exercise 9.3: many in terms of or, map2 and succeed
     * many(p) = tries running p, followed by many p.. until fails, then appends empty
+    *
+    * There is a problem with this implementation - it never terminates! It's recursive in many - the way to fix this
+    * is to make map2 and product non-strict in p2
+    *
+    * If you think about it, this makes a lot of sense for product anyway - if parser 1 fails, you don't want to
+    * evaluate parser 2
     */
   def many[A](p: Parser[A]): Parser[List[A]] = map2(p, many(p))(_ :: _) | succeed(List())
+
   /**
     * one or many, note this feels a lot like it should be p followed by many(p), so create product
     */
   def many1[A](p: Parser[A]): Parser[List[A]] = ???
 
-  def product[A,B](p: Parser[A], p2: Parser[B]): Parser[(A,B)] = ???
+  def product[A,B](p: Parser[A], p2: => Parser[B]): Parser[(A,B)] = ???
 
   /**
     * Exercise 9.1: using product, implement map2 and then use this to implement many1 in terms of many. Note, we could
@@ -104,7 +111,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     * note: I had this worked out for ages, but couldn't get it to type check - turns out you need .tupled on f here,
     * didn't know that was a thing, but hey..
     */
-  def map2[A,B,C](p: Parser[A], p2: Parser[B])(f: (A,B) => C): Parser[C] =
+  def map2[A,B,C](p: Parser[A], p2: => Parser[B])(f: (A,B) => C): Parser[C] =
     product(p, p2) map f.tupled
 
   def many1_map2[A](p: Parser[A]): Parser[List[A]] = map2(p, many(p))(_ :: _)
