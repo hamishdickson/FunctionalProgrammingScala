@@ -62,9 +62,12 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     * run(listOfN(3, "ab" | "cad"))("ababcad") == Right("ababcad")
     * run(listOfN(3, "ab" | "cad"))("cadabab") == Right("cadabab")
     * run(listOfN(3, "ab" | "cad"))("ababab") == Right("ababab")
+    *
+    * Exercise 9.4: Implement listOfN using map2 and succeed
     */
-  def listOfN[A](n: Int, p: Parser[A]): Parser[List[A]]
-
+  def listOfN[A](n: Int, p: Parser[A]): Parser[List[A]] =
+    if (n <= 0) succeed(List())
+    else map2(p, listOfN (n - 1, p) ) (_ :: _)
 
   /**
     * always succeeds with the value a
