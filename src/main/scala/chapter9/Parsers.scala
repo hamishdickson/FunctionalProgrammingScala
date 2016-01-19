@@ -46,7 +46,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     * `run(or(string("abra"), string("cadabra")))("abra") == Right("abra")`
     * `run(or(string("abra"), string("cadabra")))("cadabra") == Right("cadabra")`
     */
-  def or[A](s1: Parser[A], s2: Parser[A]): Parser[A] = ???
+  def or[A](s1: Parser[A], s2: => Parser[A]): Parser[A] = ???
 
   /**
     * With these two (and the newly implicted string) Scala will automatically promote String to a Parser and we will
