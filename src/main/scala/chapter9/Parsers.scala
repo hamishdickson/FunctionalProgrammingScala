@@ -1,7 +1,8 @@
 package chapter9
 
-import chapter9.Parsers
 import org.scalacheck._
+
+import scala.util.matching.Regex
 
 /**
   * Let's create a Parser!
@@ -102,7 +103,14 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     */
   def many1[A](p: Parser[A]): Parser[List[A]] = ???
 
-  def product[A,B](p: Parser[A], p2: => Parser[B]): Parser[(A,B)] = ???
+  /**
+    * Exercise 9.7: Implement product and map2 in terms of flatMap
+    */
+  def product[A,B](p: Parser[A], p2: => Parser[B]): Parser[(A,B)] =
+    flatMap(p)(a => p2 map(b => (a,b)))
+
+  def map2UsingFlatMap[A,B,C](p: Parser[A], p2: => Parser[B])(f: (A,B) => C): Parser[C] =
+    flatMap(p)(a => p2 map(b => f(a,b)))
 
   /**
     * Exercise 9.1: using product, implement map2 and then use this to implement many1 in terms of many. Note, we could
@@ -115,6 +123,14 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     product(p, p2) map f.tupled
 
   def many1_map2[A](p: Parser[A]): Parser[List[A]] = map2(p, many(p))(_ :: _)
+
+  def flatMap[A,B](p: Parser[A])(f: A => Parser[B]): Parser[B] = ???
+
+  /**
+    * Exercise 9.6: Implement case sensitive parser
+    */
+  implicit def regex(r: Regex): Parser[String]
+
 
   case class ParserOps[A](p: Parser[A]) {
     def |[B >: A](p2: Parser[B]): Parser[B] = self.or(p,p2)
