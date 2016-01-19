@@ -131,6 +131,11 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     */
   implicit def regex(r: Regex): Parser[String]
 
+  /**
+    * Exercise 9.8: express map in terms of flatmap
+    */
+  def map[A,B](p: Parser[A])(f: A => B): Parser[B] =
+    flatMap(p)(f andThen succeed)
 
   case class ParserOps[A](p: Parser[A]) {
     def |[B >: A](p2: Parser[B]): Parser[B] = self.or(p,p2)
@@ -138,7 +143,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     def **[B >: A](p: Parser[A], p2: Parser[B]) = self.product(p,p2)
 
     def many = self.many(p)
-    def map[B](f: A => B): Parser[B] = ???
+    def map[B](f: A => B): Parser[B] = self.map(p)(f)
   }
 
   /**
