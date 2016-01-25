@@ -144,6 +144,14 @@ trait Parsers[ParseError, Parser[+_]] { self =>
 
     def many = self.many(p)
     def map[B](f: A => B): Parser[B] = self.map(p)(f)
+
+    def *>[B](p2: => Parser[B]) = self.skipL(p, p2)
+    def <*[B](p2: => Parser[B]) = self.skipR(p, p2)
+    def token = self.token(p)
+    def sep(separator: Parser[Any]) = self.sep(p, separator)
+    def sep1(separator: Parser[Any]) = self.sep1(p, separator)
+    def as[B](b: B): Parser[B] = self.map(self.slice(p))(_ => b)
+    def opL(op: Parser[(A,A) => A]): Parser[A] = self.opL(p)(op)
   }
 
   /**
@@ -161,4 +169,45 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     // Exercise 9.2: generate laws for product: actually don't think this is true for parsers, but would be for normal product
     def productLaw_commutes[A,B](p: Parser[A], p2: Parser[B])(in: Gen[String]): Prop = equal(product(p, p2), product(p2, p))(in)
   }
+
+
+  /**
+    * Exercise 9.9 - crazy hard - write a parser for json
+    */
+  /** Wraps `p` in start/stop delimiters. */
+  def surround[A](start: Parser[Any], stop: Parser[Any])(p: => Parser[A]) =
+    start *> p <* stop
+
+  /** Sequences two parsers, ignoring the result of the first.
+    * We wrap the ignored half in slice, since we don't care about its result. */
+  def skipL[B](p: Parser[Any], p2: => Parser[B]): Parser[B] =
+    map2(slice(p), p2)((_,b) => b)
+
+
+  /** Sequences two parsers, ignoring the result of the second.
+    * We wrap the ignored half in slice, since we don't care about its result. */
+  def skipR[A](p: Parser[A], p2: => Parser[Any]): Parser[A] =
+    map2(p, slice(p2))((a,b) => a)
+
+  def attempt[A](p: Parser[A]): Parser[A]
+
+  /** Attempts `p` and strips trailing whitespace, usually used for the tokens of a grammar. */
+  def token[A](p: Parser[A]): Parser[A] =
+    attempt(p) <* whitespace
+
+  /** Parser which consumes zero or more whitespace characters. */
+  def whitespace: Parser[String] = "\\s*".r
+
+  /** Zero or more repetitions of `p`, separated by `p2`, whose results are ignored. */
+  def sep[A](p: Parser[A], p2: Parser[Any]): Parser[List[A]] = // use `Parser[Any]` since don't care about result type of separator
+    sep1(p,p2) or succeed(List())
+
+  /** One or more repetitions of `p`, separated by `p2`, whose results are ignored. */
+  def sep1[A](p: Parser[A], p2: Parser[Any]): Parser[List[A]] =
+    map2(p, many(p2 *> p))(_ :: _)
+
+  /** Parses a sequence of left-associative binary operators with the same precedence. */
+  def opL[A](p: Parser[A])(op: Parser[(A,A) => A]): Parser[A] =
+    map2(p, many(op ** p))((h,t) => t.foldLeft(h)((a,b) => b._1(a,b._2)))
+  
 }
