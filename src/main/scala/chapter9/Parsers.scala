@@ -2,6 +2,11 @@ package chapter9
 
 import org.scalacheck._
 
+import java.util.regex._
+
+import language.higherKinds
+import language.implicitConversions
+
 import scala.util.matching.Regex
 
 /**
@@ -107,7 +112,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     * Exercise 9.7: Implement product and map2 in terms of flatMap
     */
   def product[A,B](p: Parser[A], p2: => Parser[B]): Parser[(A,B)] =
-    flatMap(p)(a => p2 map(b => (a,b)))
+    flatMap(p)(a => map(p2)(b => (a,b)))
 
   def map2UsingFlatMap[A,B,C](p: Parser[A], p2: => Parser[B])(f: (A,B) => C): Parser[C] =
     flatMap(p)(a => p2 map(b => f(a,b)))
@@ -142,6 +147,9 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     def or[B >: A](p2: => Parser[B]): Parser[B] = self.or(p,p2)
     def **[B >: A](p: Parser[A], p2: Parser[B]) = self.product(p,p2)
 
+    def product[B](p2: => Parser[B]): Parser[(A,B)] =
+      self.product(p,p2)
+
     def many = self.many(p)
     def map[B](f: A => B): Parser[B] = self.map(p)(f)
 
@@ -152,6 +160,9 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     def sep1(separator: Parser[Any]) = self.sep1(p, separator)
     def as[B](b: B): Parser[B] = self.map(self.slice(p))(_ => b)
     def opL(op: Parser[(A,A) => A]): Parser[A] = self.opL(p)(op)
+
+    def label(msg: String): Parser[A] = self.label(msg)(p)
+    def scope(msg: String): Parser[A] = self.scope(msg)(p)
   }
 
   /**
@@ -208,6 +219,41 @@ trait Parsers[ParseError, Parser[+_]] { self =>
 
   /** Parses a sequence of left-associative binary operators with the same precedence. */
   def opL[A](p: Parser[A])(op: Parser[(A,A) => A]): Parser[A] =
-    map2(p, many(op ** p))((h,t) => t.foldLeft(h)((a,b) => b._1(a,b._2)))
-  
+    map2(p, many(op ** p))((h,t) => t.foldLeft(h)((a,b) => b._1(a, b._2)))
+
+  /** Parser which consumes 1 or more digits. */
+  def digits: Parser[String] = "\\d+".r
+
+  /** Parser which consumes reluctantly until it encounters the given string. */
+  def thru(s: String): Parser[String] = (".*?"+Pattern.quote(s)).r
+
+  /** Unescaped string literals, like "foo" or "bar". */
+  def quoted: Parser[String] = string("\"") *> thru("\"").map(_.dropRight(1))
+
+  /** Unescaped or escaped string literals, like "An \n important \"Quotation\"" or "bar". */
+  def escapedQuoted: Parser[String] =
+  // rather annoying to write, left as an exercise
+  // we'll just use quoted (unescaped literals) for now
+    token(quoted label "string literal")
+
+  /** C/Java style floating point literals, e.g .1, -1.0, 1e9, 1E-23, etc.
+    * Result is left as a string to keep full precision
+    */
+  def doubleString: Parser[String] =
+    token("[-+]?([0-9]*\\.)?[0-9]+([eE][-+]?[0-9]+)?".r)
+
+  /** Floating point literals, converted to a `Double`. */
+  def double: Parser[Double] =
+    doubleString map (_.toDouble) label "double literal"
+
+  def label[A](msg: String)(p: Parser[A]): Parser[A]
+  def scope[A](msg: String)(p: Parser[A]): Parser[A]
+
+  /** The root of the grammar, expects no further input following `p`. */
+  def root[A](p: Parser[A]): Parser[A] =
+    p <* eof
+
+  /** A parser that succeeds when given empty input. */
+  def eof: Parser[String] =
+    regex("\\z".r).label("unexpected trailing characters")
 }
