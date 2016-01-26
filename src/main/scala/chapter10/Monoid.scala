@@ -126,4 +126,34 @@ object Monoid {
     * Exercise 10.6: write foldLeft and foldRight in terms of foldMap
     */
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = foldMap(as, endoMonoid[B])(f.curried)(z)
+
+  /**
+    * A monoid is useful when thinking about parallelism. Consider how you would foldRight a,b,c,d
+    *
+    * op(a, op(b, op(c, d)))
+    *
+    * a balanced fold would look more like this
+    *
+    * op(op(a,b), op(c,d))
+    *
+    * Exercise 10.7: Implement foldMap for IndexedSeq (supports splitAt and length). Your implementation should use
+    * the strategy of splitting the sequence in two, recursively processing each half and then adding the answers
+    * together with the monoid
+    */
+  def foldMapV[A,B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): B =
+    if (v.isEmpty) m.zero
+    else {
+      if (v.length == 1) f(v.head)
+      else {
+        val (l,r) = v.splitAt(v.length / 2)
+        m.op(foldMapV(l, m)(f), foldMapV(r, m)(f))
+      }
+    }
+
+  /**
+    * Exercise 10.9: Use foldMap to detect whether a given IndexedSeq[Int] is ordered. You'll need to come up with
+    * a creative monoid
+    */
+
+  def ordered(ints: IndexedSeq[Int]): Boolean = ???
 }
