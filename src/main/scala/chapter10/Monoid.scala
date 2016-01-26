@@ -99,5 +99,26 @@ object Monoid {
     } yield (i,j,k)){ case (a,b,c) => m.op(a, m.op(b, c)) == m.op(m.op(a, b), c) } &&
     Prop.forAll(gen)(a => m.op(a, m.zero) == a && m.op(m.zero, a) == a)
 
-  
+
+  /**
+    * In general, foldRight and foldLeft won't form a monoid with a list, but instead of
+    *
+    * foldRight[B](z:B)(f: (A,B) => B): B
+    *
+    * imagine if A and B were the same:
+    *
+    * foldRight[A](z: A)(f: (A,A) => A): A
+    *
+    * This looks a lot like zero and op from a monoid
+    *
+    * We can create a function `concatenate` which folds a list with a monoid
+    */
+  def concatenate[A](as: List[A], m: Monoid[A]): A = as.foldLeft(m.zero)(m.op)
+
+  /**
+    * but what if our list has an element type that doesn't have a monoid instance? Well, we can always map
+    *
+    * Exercise 10.5: Implement this
+    */
+  def foldMap[A,B](as: List[A], m: Monoid[B])(f: A => B): B = as.foldRight(m.zero)((a,b) => m.op(f(a), b))
 }
