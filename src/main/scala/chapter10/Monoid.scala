@@ -121,4 +121,9 @@ object Monoid {
     * Exercise 10.5: Implement this
     */
   def foldMap[A,B](as: List[A], m: Monoid[B])(f: A => B): B = as.foldRight(m.zero)((a,b) => m.op(f(a), b))
+
+  /**
+    * Exercise 10.6: write foldLeft and foldRight in terms of foldMap
+    */
+  def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = foldMap(as, endoMonoid[B])(f.curried)(z)
 }
