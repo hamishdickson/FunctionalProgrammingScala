@@ -1,5 +1,7 @@
 package chapter10
 
+import org.scalacheck.{Prop, Gen}
+
 /**
   * A monoid consists of the following:
   * - some type A
@@ -65,6 +67,8 @@ object Monoid {
 
   /**
     * Exercise 10.2: Give monoid an instance for combining `Option` values
+    *
+    * note: could do this the other way around - this is known as the `dual`
     */
   def optionMonoid[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
     override def op(a1: Option[A], a2: Option[A]): Option[A] = a1 orElse a2
@@ -83,4 +87,17 @@ object Monoid {
 
     override def zero: (A) => A = (a: A) => a
   }
+
+  /**
+    * Exercise 10.4: use property based testing to create a laws tester
+    */
+  def monoidLaws[A](m: Monoid[A], gen: Gen[A]): Prop =
+    Prop.forAll(for {
+      i <- gen
+      j <- gen
+      k <- gen
+    } yield (i,j,k)){ case (a,b,c) => m.op(a, m.op(b, c)) == m.op(m.op(a, b), c) } &&
+    Prop.forAll(gen)(a => m.op(a, m.zero) == a && m.op(m.zero, a) == a)
+
+  
 }
