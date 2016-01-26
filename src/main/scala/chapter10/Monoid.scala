@@ -62,4 +62,25 @@ object Monoid {
 
     override def zero: Boolean = true
   }
+
+  /**
+    * Exercise 10.2: Give monoid an instance for combining `Option` values
+    */
+  def optionMonoid[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
+    override def op(a1: Option[A], a2: Option[A]): Option[A] = a1 orElse a2
+
+    override def zero: Option[A] = None
+  }
+
+  /**
+    * Exercise 10.3: A function having the same argument and return type is called an `endofunction`, write a monoid
+    * for endofunctions
+    *
+    * endo == within => endofunctions codomain is in it's domain
+    */
+  def endoMonoid[A]: Monoid[A => A] = new Monoid[(A) => A] {
+    override def op(a1: (A) => A, a2: (A) => A): (A) => A = a1 compose a2
+
+    override def zero: (A) => A = (a: A) => a
+  }
 }
