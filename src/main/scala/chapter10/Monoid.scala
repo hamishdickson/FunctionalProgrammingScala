@@ -153,7 +153,19 @@ object Monoid {
   /**
     * Exercise 10.9: Use foldMap to detect whether a given IndexedSeq[Int] is ordered. You'll need to come up with
     * a creative monoid
+    *
+    *
+    * OK - so this is kinda cool
     */
+  val orderedMonoid = new Monoid[Option[(Int, Int, Boolean)]] {
+    def op(a1: Option[(Int, Int, Boolean)], a2: Option[(Int, Int, Boolean)]) =
+      (a1, a2) match {
+        case (Some((x1, y1, p)), Some((x2, y2, q))) => Some((x1 min x2, y1 max y2, p && q && y1 <= x2))
+        case (x, None) => x
+        case (None, x) => x
+      }
+    val zero = None
+  }
 
-  def ordered(ints: IndexedSeq[Int]): Boolean = ???
+  def ordered(ints: IndexedSeq[Int]): Boolean = foldMapV(ints, orderedMonoid)(i => Some((i, i, true))).map(_._3).getOrElse(true)
 }
