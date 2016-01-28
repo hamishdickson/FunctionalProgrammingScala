@@ -168,4 +168,22 @@ object Monoid {
   }
 
   def ordered(ints: IndexedSeq[Int]): Boolean = foldMapV(ints, orderedMonoid)(i => Some((i, i, true))).map(_._3).getOrElse(true)
+
+
+  /**
+    * Example: Word counting
+    *
+    * Imagine this big book
+    */
+  val bigBook: String = "lorem ipsum dolor sit amet, "
+
+  /**
+    * If we wanted to count the words in parallel, we would split this in 2 and that.. but we'd probably split some
+    * words in 2 (resulting in double counting)
+    *
+    * Partial result of a word count could be represented by an algebraic data type
+    */
+  sealed trait WC
+  case class Stub(chars: String) extends WC
+  case class Parts(lStub: String, words: String, rStub: String) extends WC
 }
