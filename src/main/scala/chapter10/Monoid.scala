@@ -185,5 +185,16 @@ object Monoid {
     */
   sealed trait WC
   case class Stub(chars: String) extends WC
-  case class Parts(lStub: String, words: String, rStub: String) extends WC
+  case class Parts(lStub: String, words: Int, rStub: String) extends WC
+
+  val monoidWC: Monoid[WC] = new Monoid[WC] {
+    override def op(a1: WC, a2: WC): WC = (a1, a2) match {
+      case (Stub(a), Stub(b)) => Stub(a + b)
+      case (Stub(a), Parts(i, j, k)) => Parts(a + i, j, k)
+      case (Parts(i, j, k), Stub(a)) => Parts(i, j, k + a)
+      case (Parts(a,b,c), Parts(i,j,k)) => Parts(a, b + (if ((c + i).isEmpty) 0 else 1) + j, k)
+    }
+
+    override def zero: WC = Stub("")
+  }
 }
