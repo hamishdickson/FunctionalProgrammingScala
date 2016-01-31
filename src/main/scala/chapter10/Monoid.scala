@@ -2,6 +2,8 @@ package chapter10
 
 import org.scalacheck.{Prop, Gen}
 
+import scala.language.higherKinds
+
 /**
   * A monoid consists of the following:
   * - some type A
@@ -205,5 +207,47 @@ object Monoid {
     * Exercise 10.11: Use the WC monoid to implement a function that counts words in a string by recursively splitting
     * it into substrings and counting the words in those substrings
     */
-  def countWords(s: String): Int = ???
+  def countWords(s: String): Int = {
+    // A single character's count. Whitespace does not count,
+    // and non-whitespace starts a new Stub.
+    def wc(c: Char): WC =
+      if (c.isWhitespace)
+        Parts("", 0, "")
+      else
+        Stub(c.toString)
+    // `unstub(s)` is 0 if `s` is empty, otherwise 1.
+    def unstub(s: String) = s.length min 1
+    foldMapV(s.toIndexedSeq, monoidWC)(wc) match {
+      case Stub(s) => unstub(s)
+      case Parts(l, w, r) => unstub(l) + w + unstub(r)
+    }
+  }
+
+  /**
+    * In general, when we want to fold something we don't really care about what the thing is (a list, a stream...)
+    *
+    * Here, abstract over F[_], where the _ indicates that F is not a type, but a type-constructor that takes one
+    * argument. Just like functions that take other functions as arguments are called higher-order functions, Foldable
+    * is a `higher-order type constructor` or `higher-kinded type`
+    */
+  trait Foldable[F[_]] {
+    def foldRight[A,B](as: F[A])(z: B)(f: (A,B) => B): B
+    def foldLeft[A,B](as: F[A])(z: B)(f: (B,A) => B): B
+    def foldMap[A,B](as: F[A])(f: A => B)(mb: Monoid[B]): B
+    def concatenate[A](as: F[A])(m: Monoid[A]): A = foldLeft(as)(m.zero)(m.op)
+  }
+
+  /**
+    * Exercise 10.12: Implement Foldable[List], Foldable[IndexedSeq] and Foldable[Stream]
+    */
+  object ListFoldble extends Foldable[List] {
+    // by definition
+    override def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
+
+    // by definition
+    override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
+
+    override def foldMap[A, B](as: List[A])(f: (A) => B)(mb: Monoid[B]): B =
+      as.foldRight(mb.zero)((a,b) => mb.op(f(a), b))
+  }
 }
