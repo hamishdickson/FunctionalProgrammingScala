@@ -222,48 +222,73 @@ object Monoid {
       case Parts(l, w, r) => unstub(l) + w + unstub(r)
     }
   }
+}
 
-  /**
-    * In general, when we want to fold something we don't really care about what the thing is (a list, a stream...)
-    *
-    * Here, abstract over F[_], where the _ indicates that F is not a type, but a type-constructor that takes one
-    * argument. Just like functions that take other functions as arguments are called higher-order functions, Foldable
-    * is a `higher-order type constructor` or `higher-kinded type`
-    */
-  trait Foldable[F[_]] {
-    def foldRight[A,B](as: F[A])(z: B)(f: (A,B) => B): B
-    def foldLeft[A,B](as: F[A])(z: B)(f: (B,A) => B): B
-    def foldMap[A,B](as: F[A])(f: A => B)(mb: Monoid[B]): B
-    def concatenate[A](as: F[A])(m: Monoid[A]): A = foldLeft(as)(m.zero)(m.op)
+/**
+  * In general, when we want to fold something we don't really care about what the thing is (a list, a stream...)
+  *
+  * Here, abstract over F[_], where the _ indicates that F is not a type, but a type-constructor that takes one
+  * argument. Just like functions that take other functions as arguments are called higher-order functions, Foldable
+  * is a `higher-order type constructor` or `higher-kinded type`
+  */
+trait Foldable[F[_]] {
+  def foldRight[A,B](as: F[A])(z: B)(f: (A,B) => B): B
+  def foldLeft[A,B](as: F[A])(z: B)(f: (B,A) => B): B
+  def foldMap[A,B](as: F[A])(f: A => B)(mb: Monoid[B]): B
+  def concatenate[A](as: F[A])(m: Monoid[A]): A = foldLeft(as)(m.zero)(m.op)
+}
+
+/**
+  * Exercise 10.12: Implement Foldable[List], Foldable[IndexedSeq] and Foldable[Stream]
+  */
+object ListFoldable extends Foldable[List] {
+  // by definition
+  override def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
+
+  // by definition
+  override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
+
+  override def foldMap[A, B](as: List[A])(f: (A) => B)(mb: Monoid[B]): B =
+    as.foldRight(mb.zero)((a,b) => mb.op(f(a), b))
+}
+
+object IndexedSeqFoldable extends Foldable[IndexedSeq] {
+  import Monoid._
+  override def foldRight[A, B](as: IndexedSeq[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
+
+  override def foldLeft[A, B](as: IndexedSeq[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
+
+  override def foldMap[A, B](as: IndexedSeq[A])(f: (A) => B)(mb: Monoid[B]): B = foldMapV(as, mb)(f)
+}
+
+object StreamFoldable extends Foldable[Stream] {
+  override def foldRight[A, B](as: Stream[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
+
+  override def foldLeft[A, B](as: Stream[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
+
+  override def foldMap[A, B](as: Stream[A])(f: (A) => B)(mb: Monoid[B]): B = as.foldRight(mb.zero)((a,b) => mb.op(f(a), b))
+}
+
+/**
+  * Exercise 10.13: Implement Foldable for a binary tree
+  */
+sealed trait Tree[+A]
+case class Leaf[A](value: A) extends Tree[A]
+case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+
+object TreeFoldable extends Foldable[Tree] {
+  override def foldRight[A, B](as: Tree[A])(z: B)(f: (A, B) => B): B = as match {
+    case Leaf(a) => f(a, z)
+    case Branch(l, r) => foldRight(l)(foldRight(r)(z)(f))(f)
   }
 
-  /**
-    * Exercise 10.12: Implement Foldable[List], Foldable[IndexedSeq] and Foldable[Stream]
-    */
-  object ListFoldable extends Foldable[List] {
-    // by definition
-    override def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
-
-    // by definition
-    override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
-
-    override def foldMap[A, B](as: List[A])(f: (A) => B)(mb: Monoid[B]): B =
-      as.foldRight(mb.zero)((a,b) => mb.op(f(a), b))
+  override def foldLeft[A, B](as: Tree[A])(z: B)(f: (B, A) => B): B = as match {
+    case Leaf(a) => f(z, a)
+    case Branch(l, r) => foldLeft(r)(foldLeft(l)(z)(f))(f)
   }
 
-  object IndexedSeqFoldable extends Foldable[IndexedSeq] {
-    override def foldRight[A, B](as: IndexedSeq[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
-
-    override def foldLeft[A, B](as: IndexedSeq[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
-
-    override def foldMap[A, B](as: IndexedSeq[A])(f: (A) => B)(mb: Monoid[B]): B = foldMapV(as, mb)(f)
-  }
-
-  object StreamFoldable extends Foldable[Stream] {
-    override def foldRight[A, B](as: Stream[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
-
-    override def foldLeft[A, B](as: Stream[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
-
-    override def foldMap[A, B](as: Stream[A])(f: (A) => B)(mb: Monoid[B]): B = as.foldRight(mb.zero)((a,b) => mb.op(f(a), b))
+  override def foldMap[A, B](as: Tree[A])(f: (A) => B)(mb: Monoid[B]): B = as match {
+    case Leaf(a) => mb.op(f(a), mb.zero)
+    case Branch(l, r) => mb.op(foldMap(l)(f)(mb), foldMap(r)(f)(mb))
   }
 }
