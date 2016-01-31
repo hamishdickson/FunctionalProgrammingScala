@@ -230,12 +230,15 @@ object Monoid {
   * Here, abstract over F[_], where the _ indicates that F is not a type, but a type-constructor that takes one
   * argument. Just like functions that take other functions as arguments are called higher-order functions, Foldable
   * is a `higher-order type constructor` or `higher-kinded type`
+  *
+  * Exercise 10.15: Any foldable can be turned into a list, implement this
   */
 trait Foldable[F[_]] {
   def foldRight[A,B](as: F[A])(z: B)(f: (A,B) => B): B
   def foldLeft[A,B](as: F[A])(z: B)(f: (B,A) => B): B
   def foldMap[A,B](as: F[A])(f: A => B)(mb: Monoid[B]): B
   def concatenate[A](as: F[A])(m: Monoid[A]): A = foldLeft(as)(m.zero)(m.op)
+  def toList[A](fa: F[A]): List[A] = foldRight(fa)(List[A]())(_ :: _)
 }
 
 /**
@@ -250,6 +253,8 @@ object ListFoldable extends Foldable[List] {
 
   override def foldMap[A, B](as: List[A])(f: (A) => B)(mb: Monoid[B]): B =
     as.foldRight(mb.zero)((a,b) => mb.op(f(a), b))
+
+  override def toList[A](fa: List[A]): List[A] = fa
 }
 
 object IndexedSeqFoldable extends Foldable[IndexedSeq] {
