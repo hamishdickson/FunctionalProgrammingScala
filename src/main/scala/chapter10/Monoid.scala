@@ -187,6 +187,9 @@ object Monoid {
   case class Stub(chars: String) extends WC
   case class Parts(lStub: String, words: Int, rStub: String) extends WC
 
+  /**
+    * Exercise 10.10: Write a monoid for WC
+    */
   val monoidWC: Monoid[WC] = new Monoid[WC] {
     override def op(a1: WC, a2: WC): WC = (a1, a2) match {
       case (Stub(a), Stub(b)) => Stub(a + b)
@@ -197,4 +200,10 @@ object Monoid {
 
     override def zero: WC = Stub("")
   }
+
+  /**
+    * Exercise 10.11: Use the WC monoid to implement a function that counts words in a string by recursively splitting
+    * it into substrings and counting the words in those substrings
+    */
+  def countWords(s: String): Int = ???
 }
