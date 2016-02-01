@@ -235,6 +235,31 @@ object Monoid {
 
     override def zero: (A, B) = (A.zero, B.zero)
   }
+
+  /**
+    * Exercise 10.17: Write a monoid instance for functions whose results are monoids
+    */
+  def functionMonoid[A,B](B: Monoid[B]): Monoid[A => B] = new Monoid[(A) => B] {
+    override def op(a1: (A) => B, a2: (A) => B): (A) => B = a => B.op(a1(a), a2(a))
+
+    override def zero: (A) => B = a => B.zero
+  }
+
+  /**
+    * Exercise 10.18: A bag is like a set, except that it's represented by a map that contains one entry per element
+    * with that element as the key and the value under that key is the number of times the element appears in tha bag
+    */
+  def manMergeMonoid[K,V](V: Monoid[V]): Monoid[Map[K,V]] =
+    new Monoid[Map[K, V]] {
+      override def op(a1: Map[K, V], a2: Map[K, V]): Map[K, V] = (a1.keySet ++ a2.keySet).foldLeft(zero) { (acc, k) =>
+        acc.updated(k, V.op(a1.getOrElse(k, V.zero),
+                            a2.getOrElse(k, V.zero)))
+      }
+
+      override def zero: Map[K, V] = Map[K,V]()
+    }
+
+  def bag[A](as: IndexedSeq[A]): Map[A, Int] = foldMapV(as, mapMergeMonoid[A, Int](intAddition))((a: A) => Map(a -> 1))
 }
 
 /**
