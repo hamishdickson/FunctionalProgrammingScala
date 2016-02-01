@@ -15,6 +15,9 @@ import scala.language.higherKinds
   * Useful to know:
   * - means you can parallelise problem
   * - can be composed to assemble complex calculations from simpler pieces
+  *
+  * Kind of useful, but the cool fact about monoids is they `compose`. In this context it means if A and B are monoids
+  * then the tuple type (A,B) is also a monoid (called their `product`)
   */
 
 trait Monoid[A] {
@@ -221,6 +224,16 @@ object Monoid {
       case Stub(s) => unstub(s)
       case Parts(l, w, r) => unstub(l) + w + unstub(r)
     }
+  }
+
+
+  /**
+    * Exercise 10.16: prove that if A and B are monoids, then their product (A,B) is also a monoid
+    */
+  def productMonoid[A,B](A: Monoid[A], B: Monoid[B]): Monoid[(A, B)] = new Monoid[(A, B)] {
+    override def op(a1: (A, B), a2: (A, B)): (A, B) = (A.op(a1._1, a2._1), B.op(a1._2, a2._2))
+
+    override def zero: (A, B) = (A.zero, B.zero)
   }
 }
 
