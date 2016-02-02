@@ -259,7 +259,7 @@ object Monoid {
       override def zero: Map[K, V] = Map[K,V]()
     }
 
-  def bag[A](as: IndexedSeq[A]): Map[A, Int] = foldMapV(as, mapMergeMonoid[A, Int](intAddition))((a: A) => Map(a -> 1))
+  def bag[A](as: IndexedSeq[A]): Map[A, Int] = foldMapV(as, manMergeMonoid[A, Int](intAddition))((a: A) => Map(a -> 1))
 }
 
 /**
