@@ -159,7 +159,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     def sep(separator: Parser[Any]) = self.sep(p, separator)
     def sep1(separator: Parser[Any]) = self.sep1(p, separator)
     def as[B](b: B): Parser[B] = self.map(self.slice(p))(_ => b)
-    def opL(op: Parser[(A,A) => A]): Parser[A] = self.opL(p)(op)
+    //def opL(op: Parser[(A,A) => A]): Parser[A] = self.opL(p)(op)
 
     def label(msg: String): Parser[A] = self.label(msg)(p)
     def scope(msg: String): Parser[A] = self.scope(msg)(p)
@@ -218,8 +218,8 @@ trait Parsers[ParseError, Parser[+_]] { self =>
     map2(p, many(p2 *> p))(_ :: _)
 
   /** Parses a sequence of left-associative binary operators with the same precedence. */
-  def opL[A](p: Parser[A])(op: Parser[(A,A) => A]): Parser[A] =
-    map2(p, many(op ** p))((h,t) => t.foldLeft(h)((a,b) => b._1(a, b._2)))
+  /*def opL[A](p: Parser[A])(op: Parser[(A,A) => A]): Parser[A] =
+    map2(p, many(op ** p))((h,t) => t.foldLeft(h)((a,b) => b._1(a, b._2)))*/
 
   /** Parser which consumes 1 or more digits. */
   def digits: Parser[String] = "\\d+".r

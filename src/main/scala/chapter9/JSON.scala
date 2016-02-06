@@ -16,7 +16,7 @@ object JSON {
   /**
     * Exercise 9.9 - crazy hard - write a parser for json. Needed lots of help with this
     */
-  def jsonParser[Parser[+_]](P: Parsers[Parser, _]): Parser[JSON] = {
+/*  def jsonParser[Parser[+_]](P: Parsers[Parser, _]): Parser[JSON] = {
     // we'll hide the string implicit conversion and promote strings to tokens instead
     // this is a bit nicer than having to write token everywhere
     import P.{string => _, _}
@@ -40,5 +40,5 @@ object JSON {
     def value: Parser[JSON] = lit | obj | array
 
     root(whitespace *> (obj | array))
-  }
+  }*/
 }
