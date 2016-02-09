@@ -13,7 +13,7 @@ import scala.language.higherKinds
   *
   * note, monad is a functor
   */
-trait Monad[F[_]] {
+trait Monad[F[_]] extends Functor[F] {
   def unit[A](a: => A): F[A]
   def flatMap[A,B](fa: F[A])(f: A => F[B]): F[B]
 
