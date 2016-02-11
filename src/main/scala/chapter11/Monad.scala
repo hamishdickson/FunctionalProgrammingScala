@@ -90,6 +90,11 @@ trait Monad[F[_]] extends Functor[F] {
     * Exercise 11.12 implement join in terms of flatmap
     */
   def join[A](mma: F[F[A]]): F[A] = flatMap(mma)(i => i)
+
+  /**
+    * Exercise 11.13: Implement flatmap in terms of join and map
+    */
+  def flatMap3[A,B](fa: F[A])(f: A => F[B]): F[B] = join(map(fa)(f))
 }
 
 object Monad {
