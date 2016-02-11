@@ -18,6 +18,11 @@ import scala.language.higherKinds
   * 1. unit, map, flatmap
   * 2. unit, compose and map
   * 3. map, unit and join
+  *
+  * along with the laws for associativity and identity
+  *
+  *
+  * Monads: provide a context for introducing and binding variables and performing substitution
   */
 trait Monad[F[_]] extends Functor[F] {
   def unit[A](a: => A): F[A]
@@ -65,7 +70,7 @@ trait Monad[F[_]] extends Functor[F] {
     *
     * Exercise 11.7: Implement the kleisli composition function compose
     */
-  def compose[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] = a => flatMap(f(a))(g)
+  def composeKleisli[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] = a => flatMap(f(a))(g)
 
   /**
     * Exercise 11.8: Implement flatMap in terms of unit and compose
@@ -136,4 +141,44 @@ object Monad {
     }
   }
 
+  /**
+    * See below - this is actually really fucking cool
+    */
+  // But we don't have to create a full class like `StateMonads`. We can create
+  // an anonymous class inline, inside parentheses, and project out its type member,
+  // `lambda`:
+  def stateMonad[S] = new Monad[({type lambda[x] = State[S, x]})#lambda] {
+    def unit[A](a: => A): State[S, A] = State(s => (a, s))
+    override def flatMap[A,B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
+      st flatMap f
+  }
+
+  val idMonad: Monad[Id] = new Monad[Id] {
+    override def flatMap[A, B](fa: Id[A])(f: (A) => Id[B]): Id[B] = fa.flatMap(f)
+
+    override def unit[A](a: => A): Id[A] = Id(a)
+  }
+
 }
+
+/**
+  * Exercise 11.17: Implement map and flatmap as methods on this class and give an implementation for Monad[Id]
+  */
+case class Id[A](value: A) {
+  def map[B](f: A => B): Id[B] = Id(f(value))
+  def flatMap[B](f: A => Id[B]): Id[B] = f(value)
+}
+
+/*
+This thing:
+
+object IntStateMonad extends Monad[((type IntState[A] = State[Int,A]))#IntState] {
+
+}
+
+is a Monad with an anonymous type, which is kind of cool. You access the type with #, this is called type projection and
+is a bit like using a . to access a member at value-level programming
+
+a type constructor declared inline like this is called a `type lambda` in scala. we can use this trick to partially
+apply the State type constructor and declare the State-Monad trait
+*/
