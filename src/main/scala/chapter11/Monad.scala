@@ -12,6 +12,12 @@ import scala.language.higherKinds
   * unit and flatMap, then we get map and map2 for nothing :)
   *
   * note, monad is a functor
+  *
+  *
+  * weirdly, there are 3 (seemingly equivalent) definitions of monad:
+  * 1. unit, map, flatmap
+  * 2. unit, compose and map
+  * 3. map, unit and join
   */
 trait Monad[F[_]] extends Functor[F] {
   def unit[A](a: => A): F[A]
@@ -60,6 +66,30 @@ trait Monad[F[_]] extends Functor[F] {
     * Exercise 11.7: Implement the kleisli composition function compose
     */
   def compose[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] = a => flatMap(f(a))(g)
+
+  /**
+    * Exercise 11.8: Implement flatMap in terms of unit and compose
+    *
+    * I actually got this using basically dimensional analysis, but couldn't work out the Unit bit
+    */
+  def flatMap2[A,B](fa: F[A])(f: A => F[B]): F[B] = compose((_: Unit) => fa, f)(())
+
+  /**
+    * Identity laws:
+    *
+    * Left and right laws:
+    * compose(f, unit) == f
+    * compose(unit, f) == f
+    *
+    * or in terms of flatMap
+    * flatMap(x)(unit) == x
+    * flatMap(unit(y))(f) == f(y)
+    */
+
+  /**
+    * Exercise 11.12 implement join in terms of flatmap
+    */
+  def join[A](mma: F[F[A]]): F[A] = flatMap(mma)(i => i)
 }
 
 object Monad {
