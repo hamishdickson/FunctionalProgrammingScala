@@ -153,6 +153,21 @@ object Monad {
       st flatMap f
   }
 
+  /**
+    * Example, getting and setting state with a for-comprehension
+    */
+  val F = stateMonad[Int]
+
+  def zipWithIndex[A](as: List[A]): List[(Int, A)] = as.foldLeft(F.unit(List[(Int,A)]()))((acc, a) => for {
+    xs <- acc
+    n <- getState
+    _ <- setState(n + 1)
+  } yield (n,a) :: xs).run(0)._1.reverse
+
+  def getState[S]: State[S,S] = State(i => (i,i))
+  def setState[S](s: S): State[S,Unit] = State(_ => ((), s))
+
+
   val idMonad: Monad[Id] = new Monad[Id] {
     override def flatMap[A, B](fa: Id[A])(f: (A) => Id[B]): Id[B] = fa.flatMap(f)
 
