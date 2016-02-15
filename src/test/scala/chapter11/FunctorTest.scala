@@ -1,6 +1,6 @@
 package chapter11
 
-import org.scalacheck.{Prop, Gen}
+import org.scalacheck.Prop
 import org.scalatest.{Matchers, FlatSpec}
 
 class FunctorTest extends FlatSpec with Matchers {
