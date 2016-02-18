@@ -29,4 +29,19 @@ trait Applicative[F[_]] extends Functor[F] {
   def sequence[A](fas: List[F[A]]): F[List[A]] = traverse(fas)(fa => fa)
   def replicateM[A](n: Int, fa: F[A]): F[List[A]] = sequence(List.fill(n)(fa))
   def product[A,B](fa: F[A], fb: F[B]): F[(A,B)] = map2(fa, fb)((_, _))
+
+  /**
+    * Exercise 12.2
+    * applicative comes from the fact we can formulate the Applicative interface using an alternative set of
+    * primitives: unit and apply, rather than unit and map2. Define map and map2 in terms of unit and apply. Also show
+    * the opposite
+    */
+  def apply[A,B](fab: F[A => B])(fa: F[A]): F[B] =
+    map2(fab, fa)(_(_))
+  def unit_byMaps[A](a: => A): F[A] =
+    map(Unit[F[A]])(_ => a)
+
+  def map_byApply[A,B](fa: F[A])(f: A => B): F[B] =
+    apply[A,B](unit(f))(fa) // this needs the explicit type for some reason...
+  def map2_byApply[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C]
 }
