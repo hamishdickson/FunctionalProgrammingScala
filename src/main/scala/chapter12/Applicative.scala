@@ -43,5 +43,16 @@ trait Applicative[F[_]] extends Functor[F] {
 
   def map_byApply[A,B](fa: F[A])(f: A => B): F[B] =
     apply[A,B](unit(f))(fa) // this needs the explicit type for some reason...
-  def map2_byApply[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] //= apply(map(fa)(f.curried))(fb)
+  def map2_byApply[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] = apply[B,C](map(fa)(f.curried))(fb)
+
+  /**
+    * Exercise 12.3: Implement map3 and map4 using only unit, apply and the curried method available on functions
+    *
+    * nb: if `f: (A,B) => C` then `f.curried` has the type `A => B => C`
+    */
+  def map3[A,B,C,D](fa: F[A], fb: F[B], fc: F[C])(f: (A, B, C) => D): F[D] =
+    apply[C,D](apply[B, C => D](apply[A, B => C => D](unit(f.curried))(fa))(fb))(fc)
+
+  def map4[A,B,C,D,E](fa: F[A], fb: F[B], fc: F[C], fd: F[D])(f: (A, B, C, D) => E): F[E] =
+    apply[D,E](apply[C,D => E](apply[B, C => D => E](apply[A, B => C => D => E](unit(f.curried))(fa))(fb))(fc))(fd)
 }
