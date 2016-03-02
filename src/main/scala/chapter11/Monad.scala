@@ -23,6 +23,8 @@ import scala.language.higherKinds
   *
   *
   * Monads: provide a context for introducing and binding variables and performing substitution
+  *
+  *  Note: All Monads are applicative Functors
   */
 trait Monad[F[_]] extends Functor[F] {
   def unit[A](a: => A): F[A]

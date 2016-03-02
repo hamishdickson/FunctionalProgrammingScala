@@ -8,6 +8,8 @@ import scala.language.higherKinds
   * The applicative trait is less powerful than the monad one, but that comes with it's own benefits
   *
   * All applicatives are functors. implement map in terms of map2 and unit
+  *
+  * Note: All Monads are applicative Functors
   */
 trait Applicative[F[_]] extends Functor[F] {
   // primitive combinators
@@ -55,4 +57,19 @@ trait Applicative[F[_]] extends Functor[F] {
 
   def map4[A,B,C,D,E](fa: F[A], fb: F[B], fc: F[C], fd: F[D])(f: (A, B, C, D) => E): F[E] =
     apply[D,E](apply[C,D => E](apply[B, C => D => E](apply[A, B => C => D => E](unit(f.curried))(fa))(fb))(fc))(fd)
+}
+
+trait Monad[F[_]] extends Applicative[F] {
+  def flatMap[A,B](fa: F[A])(f: A => F[B]): F[B] = join(map(fa)(f))
+
+  def join[A](ffa: F[F[A]]): F[A] = flatMap(ffa)(fa => fa) = flatMap(ffa)(fa => fa)
+
+  def compose[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] =
+    a => flatMap(f(a))(g)
+
+  override def map[A,B](fa: F[A])(f: A => B): F[B] =
+    flatMap(fa)((a: A) => unit(f(a)))
+  
+  def map2[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] =
+    flatMap(fa)(a => map(fb)(b => f(a,b)))
 }
