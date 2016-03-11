@@ -72,7 +72,25 @@ trait Monad[F[_]] extends Applicative[F] {
 
   override def map[A,B](fa: F[A])(f: A => B): F[B] =
     flatMap(fa)((a: A) => unit(f(a)))
-  
+
   def map2[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] =
     flatMap(fa)(a => map(fb)(b => f(a,b)))
+}
+
+object Applicative {
+
+  /**
+    * for streams we can define unit and map2, but not flatmap (ie a monad)
+    */
+  val streamApplicative = new Applicative[Stream] {
+    override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] =
+      fa zip fb map f.tupled
+
+    override def unit[A](a: => A): Stream[A] = Stream.continually(a)
+
+    /**
+      * Exercise 12.4: What is the meaning of streamApplicative.sequence?
+      */
+    override def sequence[A](a: List[Stream[A]]): Stream[List[A]] = ???
+  }
 }
