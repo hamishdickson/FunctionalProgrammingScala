@@ -2,7 +2,7 @@ package chapter12
 
 import chapter11.Functor
 
-import scala.language.higherKinds
+import scala.language.{reflectiveCalls, higherKinds}
 
 /**
   * The applicative trait is less powerful than the monad one, but that comes with it's own benefits
@@ -59,6 +59,24 @@ trait Applicative[F[_]] extends Functor[F] {
     apply[D,E](apply[C,D => E](apply[B, C => D => E](apply[A, B => C => D => E](unit(f.curried))(fa))(fb))(fc))(fd)
 }
 
+object Applicative {
+
+  /**
+    * for streams we can define unit and map2, but not flatmap (ie a monad)
+    */
+  val streamApplicative = new Applicative[Stream] {
+    override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] =
+      fa zip fb map f.tupled
+
+    override def unit[A](a: => A): Stream[A] = Stream.continually(a)
+
+    /**
+      * Exercise 12.4: What is the meaning of streamApplicative.sequence?
+      */
+    override def sequence[A](a: List[Stream[A]]): Stream[List[A]] = ???
+  }
+}
+
 /**
   * A minimal implementation of monad must implement `unit` and override either `flatMap` or `join` and `map`
   */
@@ -77,20 +95,16 @@ trait Monad[F[_]] extends Applicative[F] {
     flatMap(fa)(a => map(fb)(b => f(a,b)))
 }
 
-object Applicative {
-
+object Monad {
   /**
-    * for streams we can define unit and map2, but not flatmap (ie a monad)
+    * Exercise 12.5: Write a monad instance for Either
     */
-  val streamApplicative = new Applicative[Stream] {
-    override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] =
-      fa zip fb map f.tupled
+  def eitherMonad[E]: Monad[({type f[x] = Either[E, x]})#f] = new Monad[({type f[x] = Either[E, x]})#f] {
+    override def unit[A](a: => A): Either[E, A] = Right(a)
 
-    override def unit[A](a: => A): Stream[A] = Stream.continually(a)
-
-    /**
-      * Exercise 12.4: What is the meaning of streamApplicative.sequence?
-      */
-    override def sequence[A](a: List[Stream[A]]): Stream[List[A]] = ???
+    override def flatMap[A,B](eea: Either[E, A])(f: A => Either[E, B]) = eea match {
+      case Right(a) => f(a)
+      case Left(b) => Left(b) // notice it does nothing in the case of left
+    }
   }
 }
