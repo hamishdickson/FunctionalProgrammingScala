@@ -88,6 +88,8 @@ object Applicative {
         case (Success(a), Success(b)) => Success(f(a,b))
         case (Failure(h1, t1), Failure(h2, t2)) =>
           Failure(h1, t1 ++ Vector(h2) ++ t2)
+        //case (Failure(h, t), Success(a)) => Failure(h, t)
+        //case (Success(a), Failure(h, t)) => Failure(h, t)
         case (e@Failure(_, _), _) => e // ??!
         case (_, e@Failure(_,_)) => e  // ??!
       }
@@ -129,7 +131,7 @@ object Monad {
 }
 
 /**
-  * Validation - a bit like Either, but it can explictly handle more than one error
+  * Validation - a bit like Either, but it can explicitly handle more than one error
   */
 sealed trait Validation[+E, +A]
 case class Failure[E](head: E, tail: Vector[E] = Vector()) extends Validation[E, Nothing]
