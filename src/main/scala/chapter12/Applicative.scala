@@ -1,5 +1,7 @@
 package chapter12
 
+import java.util.Date
+
 import chapter11.Functor
 
 import scala.language.{reflectiveCalls, higherKinds}
@@ -10,6 +12,19 @@ import scala.language.{reflectiveCalls, higherKinds}
   * All applicatives are functors. implement map in terms of map2 and unit
   *
   * Note: All Monads are applicative Functors
+  *
+  * Laws:
+  * 1) left and right identity:
+  *   First off, we expect applicatives to satisfy the Functor laws:
+  *   - map(v)(id) == v
+  *   - map(map(v(g))(f) == map(v)(f compose g)
+  *
+  *   here, we've implemented map in terms of map2, as `map2(fa, unit(()))((a, _) => f(a))`. This was abitary and could
+  *   have been `map2(unit(()), fa)((_, a) => f(a))` these are the left and right identity laws.
+  * 2) Associativity:
+  *   recall we wrote map3 in terms of apply and unit. Instead we could have used map2. This would involve using map2
+  *   with 2 or the args, then their result on the 3rd. There are 2 ways to do this -> associative.
+  *
   */
 trait Applicative[F[_]] extends Functor[F] {
   // primitive combinators
@@ -136,3 +151,28 @@ object Monad {
 sealed trait Validation[+E, +A]
 case class Failure[E](head: E, tail: Vector[E] = Vector()) extends Validation[E, Nothing]
 case class Success[A](a: A) extends Validation[Nothing, A]
+
+case class WebForm(name: String, birthdate: Date, phoneNumber: String) {
+  def validName(name: String): Validation[String,String] =
+    if (name != "") Success(name)
+    else Failure("Name cannot be empty")
+
+  def validBirthdate(birthdate: String): Validation[String,Date] =
+    try {
+      import java.text._
+      Success(new SimpleDateFormat("yyyy-MM-dd").parse(birthdate))
+    } catch {
+      case _: Throwable => Failure("Birthdate must be of form yy-MM-dd")
+    }
+
+  def validPhone(phoneNumber: String): Validation[String, String] =
+    if (phoneNumber.matches("[0-9](10)"))
+      Success(phoneNumber)
+    else Failure("Phone number must be 10 digits")
+
+  /**
+    * Great, now we have those, we can lift the entire WebForm constructor with map3
+    */
+  /*def validWebForm(name: String, birthdate: String, phone: String): Validation[String, WebForm] =
+    map3(validName(name), validBirthdate(birthdate), validPhone(phoneNumber))*/
+}
