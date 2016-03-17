@@ -25,6 +25,17 @@ import scala.language.{reflectiveCalls, higherKinds}
   *   recall we wrote map3 in terms of apply and unit. Instead we could have used map2. This would involve using map2
   *   with 2 or the args, then their result on the 3rd. There are 2 ways to do this -> associative.
   *
+  * 3) Naturality of product
+  *   Doesn't matter if you apply a transform before or after map2 (say), eg
+  *   `map2(a,b)(productF(f,g)) == product(map(a)(f), map(b)(g))`
+  *
+  *   where productF combines two functions into one function that takes both as args and returns the pair of their
+  *   results:
+  *
+  *   def productF[I,O,I2,O2](f: I => O, g: I2 => O2): (I,I2) => (O,O2) =
+  *     (i,i2) => (f(i), g(i2))
+  *
+  *
   */
 trait Applicative[F[_]] extends Functor[F] {
   // primitive combinators
