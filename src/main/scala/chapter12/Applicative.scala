@@ -39,12 +39,11 @@ import scala.language.{reflectiveCalls, higherKinds}
   */
 trait Applicative[F[_]] extends Functor[F] {
   // primitive combinators
-  def map2[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C]
+  def map2[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] = apply(map(fa)(f.curried))(fb)
   def unit[A](a: => A): F[A]
 
   // derived combinators
-  def map[A,B](fa: F[A])(f: A => B): F[B] =
-    map2(fa, unit(()))((a, _) => f(a))  // note the unit(()) isn't a typo - () is sole value of type Unit
+  def map[A,B](fa: F[A])(f: A => B): F[B] = map2(fa, unit(()))((a, _) => f(a))  // note the unit(()) isn't a typo - () is sole value of type Unit
 
   def traverse[A,B](as: List[A])(f: A => F[B]): F[List[B]] =
     as.foldRight(unit(List[B]()))((a,b) => map2(f(a), b)(_ :: _))
@@ -83,6 +82,21 @@ trait Applicative[F[_]] extends Functor[F] {
 
   def map4[A,B,C,D,E](fa: F[A], fb: F[B], fc: F[C], fd: F[D])(f: (A, B, C, D) => E): F[E] =
     apply[D,E](apply[C,D => E](apply[B, C => D => E](apply[A, B => C => D => E](unit(f.curried))(fa))(fb))(fc))(fd)
+
+  /**
+    * Exercise 12.8: Just as we can take the product of two monoids, A,B to give the monoid (A,B), we can take the
+    * product of Applicatives - implement this
+    */
+  def product[G[_]](G: Applicative[G]): Applicative[({type f[x] = (F[x], G[x])})#f] = {
+    val self = this
+    new Applicative[({type f[x] = (F[x], G[x])})#f] {
+      def unit[A](a: => A) = (self.unit(a), G.unit(a))
+      def apply[A,B](fs: (F[A => B], G[A => B]))(p: (F[A], G[A])) =
+        (self.apply(fs._1)(p._1), G.apply(fs._2)(p._2))
+
+      override def map[A, B](fa: (F[A], G[A]))(f: (A) => B): (F[B], G[B]) = ???
+    }
+  }
 }
 
 object Applicative {
