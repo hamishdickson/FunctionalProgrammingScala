@@ -169,8 +169,16 @@ trait Monad[F[_]] extends Applicative[F] {
   override def map[A,B](fa: F[A])(f: A => B): F[B] =
     flatMap(fa)((a: A) => unit(f(a)))
 
-  def map2[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] =
+  override def map2[A,B,C](fa: F[A], fb: F[B])(f: (A,B) => C): F[C] =
     flatMap(fa)(a => map(fb)(b => f(a,b)))
+
+  /**
+    * Exercise 12.11: Try to write compose on Monad. It's not possible, but it's instructive to attempt it and
+    * understand why this is the case
+    *
+    * http://tonymorris.github.io/blog/posts/monads-do-not-compose/
+    */
+  def compose[G[_]](G: Monad[G]): Monad[({type f[x] = F[G[x]]})#f] = ???
 }
 
 object Monad {
