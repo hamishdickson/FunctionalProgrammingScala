@@ -58,6 +58,18 @@ trait Applicative[F[_]] extends Functor[F] {
   def product[A,B](fa: F[A], fb: F[B]): F[(A,B)] = map2(fa, fb)((_, _))
 
   /**
+    * Exercise 12.12: So if we look at sequence, it's a bit weird that we have a concrete type (List) in an abstract interface
+    * maybe we can abstract over it?
+    *
+    * Implement sequence over Map rather than a List
+    *
+    * Notes: Tried this with foldRight for ages before trying foldLeft and it just working - not sure what that's about
+    * (commutivity?)
+    */
+  def sequenceMap[K,V](ofa: Map[K,F[V]]): F[Map[K,V]] =
+    ofa.foldLeft(unit(Map.empty[K,V])){ case (a,(k,fv)) => map2(a, fv)((m, v) => m + (k -> v)) }
+
+  /**
     * Exercise 12.2
     * applicative comes from the fact we can formulate the Applicative interface using an alternative set of
     * primitives: unit and apply, rather than unit and map2. Define map and map2 in terms of unit and apply. Also show
@@ -225,4 +237,53 @@ case class WebForm(name: String, birthdate: Date, phoneNumber: String) {
     */
   /*def validWebForm(name: String, birthdate: String, phone: String): Validation[String, WebForm] =
     map3(validName(name), validBirthdate(birthdate), validPhone(phoneNumber))*/
+}
+
+/**
+  * Lets wrap up our generalisation of sequence over List and Map
+  */
+trait Traverse[F[_]] extends Functor[F] {
+  def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
+
+  /**
+    * This does something quiet cool - if G is an applicative functor, then sequence swaps F and G in F[G[A]]
+    */
+  def sequence[G[_]: Applicative,A](fga: F[G[A]]): G[F[A]] = traverse(fga)(ga => ga)
+}
+
+case class Tree[+A](head: A, tail: List[Tree[A]])
+
+object Traverse {
+  /**
+    * Exercise 12.13: write traverse instances for List, Option and Tree
+    */
+  val listTraverse: Traverse[List] = new Traverse[List] {
+    // I've done something wrong here with my definitions :,(
+    override def map[A, B](fa: List[A])(f: (A) => B): List[B] = fa map f
+
+    /**
+      * OK .. so, took me a while to see that I needed G.unit here - then realised (cheated) you can use a typeclass
+      * to provide the applicative - penny drop moment
+      */
+    def traverse[G[_]: Applicative,A,B](fa: List[A])(f: A => G[B])(implicit G: Applicative[G]): G[List[B]] =
+      fa.foldRight(G.unit(List[B]()))((a,b) => G.map2(f(a), b)(_ :: _))
+  }
+
+
+  val optionTraverse: Traverse[Option] = new Traverse[Option] {
+    override def map[A, B](fa: Option[A])(f: (A) => B): Option[B] = fa map f
+
+    def traverse[G[_]: Applicative,A,B](fa: Option[A])(f: A => G[B])(implicit G: Applicative[G]): G[Option[B]] = fa match {
+      case Some(a) => G.map(f(a))(Some(_))
+      case None => G.unit(None)
+    }
+  }
+
+  val treeTraverse: Traverse[Tree] = new Traverse[Tree] {
+    override def map[A, B](fa: Tree[A])(f: (A) => B): Tree[B] = ???
+
+    // OK the trick here is to see that you need listTraverse
+    def traverse[G[_]: Applicative,A,B](fa: Tree[A])(f: A => G[B])(implicit G: Applicative[G]): G[Tree[B]] =
+      G.map2(f(fa.head), listTraverse.traverse(fa.tail)(a => traverse(a)(f)))(Tree(_, _))
+  }
 }
