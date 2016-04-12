@@ -259,6 +259,26 @@ trait Traverse[F[_]] extends Functor[F] {
     * This does something quiet cool - if G is an applicative functor, then sequence swaps F and G in F[G[A]]
     */
   def sequence[G[_]: Applicative,A](fga: F[G[A]]): G[F[A]] = traverse(fga)(ga => ga)
+
+
+  /**
+    * Exercise 12.14: (hard) implement map in terms of traverse as a method on traverse[F]
+    *
+    * this implies that Traverse is an extension of Functor and that the traverse function is a
+    * generalization of map (for this reason we sometimes call these traversable functors)
+    *
+    *
+    * So nearly got this - realised you needed to specify what's going on in the type sig... didn't
+    * realise you needed the idMonad though..
+    */
+  def map[A,B](fa: F[A])(f: A => B): F[B] = traverse[Id,A,B](fa)(f)(idMonad)
+
+  type Id[A] = A
+
+  val idMonad = new Monad[Id] {
+    def unit[A](a: => A) = a
+    override def flatMap[A,B](a: A)(f: A => B): B = f(a)
+  }
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
