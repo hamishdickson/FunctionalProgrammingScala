@@ -2,9 +2,10 @@ package chapter12
 
 import java.util.Date
 
+import chapter10.{Foldable, Monoid}
 import chapter11.Functor
 
-import scala.language.{reflectiveCalls, higherKinds}
+import scala.language.{higherKinds, reflectiveCalls}
 
 /**
   * The applicative trait is less powerful than the monad one, but that comes with it's own benefits
@@ -251,8 +252,12 @@ case class WebForm(name: String, birthdate: Date, phoneNumber: String) {
   *
   * Traverse is similar to fold in that it takes some data structure and a function, but traverse preserves the
   * original structure
+  *
+  * Traverse is more general than `map`, it can also express `foldMap` (and so `foldLeft` and `foldRight`
+  *
+  *
   */
-trait Traverse[F[_]] extends Functor[F] {
+trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
 
   /**
@@ -279,6 +284,21 @@ trait Traverse[F[_]] extends Functor[F] {
     def unit[A](a: => A) = a
     override def flatMap[A,B](a: A)(f: A => B): B = f(a)
   }
+
+  /**
+    * You can turn any monoid into an applicative provided there's a constant functor (see below for what that is)
+    *
+    * This means Traverse can extend Foldable and we give a default implementation of foldmap in terms of traverse
+    */
+  type Const[M,B] = B
+
+  implicit def monoidApplicative[M](M: Monoid[M]) = new Applicative[({ type f[x] = Const[M,x] })#f] {
+    override def unit[A](a: => A): M = M.zero
+    def map2[A,B,C](m1: M, m2: M)(f: (A,B) => C): M = M.op(m1, m2)
+  }
+
+  def foldMap[A,M](as: F[A])(f: A => M)(mb: Monoid[M]): M =
+    traverse[({ type f[x] = Const[M, x]} )#f, A, Nothing](as)(f)(monoidApplicative(mb))
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
