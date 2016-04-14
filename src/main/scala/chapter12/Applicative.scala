@@ -5,7 +5,9 @@ import java.util.Date
 import chapter10.{Foldable, Monoid}
 import chapter11.Functor
 
-import scala.language.{higherKinds, reflectiveCalls}
+import chapter6._
+
+import scala.language.{higherKinds, reflectiveCalls, implicitConversions}
 
 /**
   * The applicative trait is less powerful than the monad one, but that comes with it's own benefits
@@ -78,8 +80,7 @@ trait Applicative[F[_]] extends Functor[F] {
     */
   def apply[A,B](fab: F[A => B])(fa: F[A]): F[B] =
     map2(fab, fa)(_(_))
-  def unit_byMaps[A](a: => A): F[A] =
-    map(Unit[F[A]])(_ => a)
+  //def unit_byMaps[A](a: => A): F[A] = map(Unit[F[A]])(_ => a)
 
   def map_byApply[A,B](fa: F[A])(f: A => B): F[B] =
     apply[A,B](unit(f))(fa) // this needs the explicit type for some reason...
@@ -135,8 +136,7 @@ object Applicative {
     * for streams we can define unit and map2, but not flatmap (ie a monad)
     */
   val streamApplicative = new Applicative[Stream] {
-    override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] =
-      fa zip fb map f.tupled
+    override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] = fa zip fb map f.tupled
 
     override def unit[A](a: => A): Stream[A] = Stream.continually(a)
 
@@ -174,7 +174,7 @@ object Applicative {
 trait Monad[F[_]] extends Applicative[F] {
   def flatMap[A,B](fa: F[A])(f: A => F[B]): F[B] = join(map(fa)(f))
 
-  def join[A](ffa: F[F[A]]): F[A] = flatMap(ffa)(fa => fa) = flatMap(ffa)(fa => fa)
+  def join[A](ffa: F[F[A]]): F[A] = flatMap(ffa)(fa => fa)
 
   def compose[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] =
     a => flatMap(f(a))(g)
@@ -205,6 +205,12 @@ object Monad {
       case Right(a) => f(a)
       case Left(b) => Left(b) // notice it does nothing in the case of left
     }
+  }
+
+  def stateMonad[S] = new Monad[({type f[x] = State[S, x]})#f] {
+    def unit[A](a: => A): State[S, A] = State(s => (a, s))
+    override def flatMap[A,B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
+      st flatMap f
   }
 }
 
@@ -255,7 +261,9 @@ case class WebForm(name: String, birthdate: Date, phoneNumber: String) {
   *
   * Traverse is more general than `map`, it can also express `foldMap` (and so `foldLeft` and `foldRight`
   *
-  *
+  * Note, Traverse extends Functor and Foldable, but Functor itself can't extend Foldable, this is because
+  *  even though map can be written in terms of fold for things like List, it isn't so in general. An
+  *  example of this is Iterate (apparently)
   */
 trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
@@ -290,15 +298,22 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
     *
     * This means Traverse can extend Foldable and we give a default implementation of foldmap in terms of traverse
     */
-  type Const[M,B] = B
+  type Const[A,B] = A
 
   implicit def monoidApplicative[M](M: Monoid[M]) = new Applicative[({ type f[x] = Const[M,x] })#f] {
     override def unit[A](a: => A): M = M.zero
+    //override def apply[A,B](m1: M)(m2: M): M = M.op(m1, m2)
     def map2[A,B,C](m1: M, m2: M)(f: (A,B) => C): M = M.op(m1, m2)
   }
 
   def foldMap[A,M](as: F[A])(f: A => M)(mb: Monoid[M]): M =
     traverse[({ type f[x] = Const[M, x]} )#f, A, Nothing](as)(f)(monoidApplicative(mb))
+
+  /**
+    * traverseS lets traverse a collection that keeps some kind of internal state
+    */
+  def traverseS[S,A,B](fa: F[A])(f: A => State[S,B]): State[S, F[B]] =
+    traverse[({type f[x] = State[S,x]})#f,A,B](fa)(f)(Monad.stateMonad)
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
