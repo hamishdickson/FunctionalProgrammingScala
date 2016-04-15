@@ -259,7 +259,7 @@ case class WebForm(name: String, birthdate: Date, phoneNumber: String) {
   * Traverse is similar to fold in that it takes some data structure and a function, but traverse preserves the
   * original structure
   *
-  * Traverse is more general than `map`, it can also express `foldMap` (and so `foldLeft` and `foldRight`
+  * Traverse is more general than `map`, it can also express `foldMap` (and so `foldLeft` and `foldRight`)
   *
   * Note, Traverse extends Functor and Foldable, but Functor itself can't extend Foldable, this is because
   *  even though map can be written in terms of fold for things like List, it isn't so in general. An
@@ -314,6 +314,43 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
     */
   def traverseS[S,A,B](fa: F[A])(f: A => State[S,B]): State[S, F[B]] =
     traverse[({type f[x] = State[S,x]})#f,A,B](fa)(f)(Monad.stateMonad)
+
+  /**
+    * Example of traverseS being useful - zipWithIndex - you have to keep track of the index
+    *  This works for Tree or List or any other traversable
+    */
+  import State._
+
+  def zipWithIndex_[A](ta: F[A]): F[(A,Int)] =
+    traverseS(ta)((a: A) => (for {
+      i <- get[Int]
+      _ <- set(i + 1)
+    } yield (a,i))).run(0)._1
+
+  /**
+    * Can also keep a state of type List[A], to turn any traversable functor into a list
+    */
+  def toList_[A](fa: F[A]): List[A] =
+    traverseS(fa)((a: A) => (for {
+      as <- get[List[A]] // Get the current state, the accumulated list.
+      _  <- set(a :: as) // Add the current element and set the new list as the new state.
+    } yield ())).run(Nil)._2.reverse
+
+  /**
+    * Note zipWithIndex and toList are almost identical.... create a function!
+    */
+  def mapAccum[S,A,B](fa: F[A], s: S)(f: (A, S) => (B, S)): (F[B], S) =
+    traverseS(fa)((a: A) => (for {
+      s1 <- get[S]
+      (b, s2) = f(a, s1)
+      _ <- set(s2)
+    } yield b)).run(s)
+
+  def toList[A](fa: F[A]): List[A] =
+    mapAccum(fa, List[A]())((a, s) => ((), a :: s))._2.reverse
+
+  def zipWithIndex[A](ta: F[A]): F[(A, Int)] =
+    mapAccum(ta, 0)((a, s) => ((a,s), s + 1))._1
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
