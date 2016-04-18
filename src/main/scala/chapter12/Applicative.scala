@@ -351,6 +351,22 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
 
   def zipWithIndex[A](ta: F[A]): F[(A, Int)] =
     mapAccum(ta, 0)((a, s) => ((a,s), s + 1))._1
+
+  /**
+    * Exercise 12.16: There's an interesting consequence of being able to turn any traversable functor into a
+    *  reversed list - we can write a function to reverse any trversable functor.
+    *
+    *  this ... doesn't feel right.. it feels like it should be something like
+    *  def reverse[A,M](fa: F[A])(M: Monoid[A]) =  mapAccum(fa, M.zero)((a,as) => ((), M.op(a, as))))._2
+    *
+    *  however, this has the advantage in that it doesn't require a monoid
+    */
+  def reverse[A](fa: F[A]): F[A] = mapAccum(fa, toList(fa).reverse)((_, as) => (as.head, as.tail))._1
+
+  /**
+    * Exercise 12.17 implement foldLeft
+    */
+  def foldLeft[A,B](fa: F[A])(z: B)(f: (B, A) => B): B = mapAccum(fa, z)((a,b) => ((), f(b,a)))._2
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
