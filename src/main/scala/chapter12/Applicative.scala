@@ -105,7 +105,7 @@ trait Applicative[F[_]] extends Functor[F] {
     val self = this
     new Applicative[({type f[x] = (F[x], G[x])})#f] {
       def unit[A](a: => A) = (self.unit(a), G.unit(a))
-      def apply[A,B](fs: (F[A => B], G[A => B]))(p: (F[A], G[A])) =
+      override def apply[A,B](fs: (F[A => B], G[A => B]))(p: (F[A], G[A])) =
         (self.apply(fs._1)(p._1), G.apply(fs._2)(p._2))
 
       override def map[A, B](fa: (F[A], G[A]))(f: (A) => B): (F[B], G[B]) = ???
@@ -123,7 +123,7 @@ trait Applicative[F[_]] extends Functor[F] {
     new Applicative[({type f[x] = F[G[x]]})#f] {
       override def unit[A](a: => A): F[G[A]] = self.unit(G.unit(a))
 
-      def map2[A,B,C](fga: F[G[A]], fgb: F[G[B]])(f: (A,B) => C) = self.map2(fga, fgb)(G.map2(_,_)(f))
+      override def map2[A,B,C](fga: F[G[A]], fgb: F[G[B]])(f: (A,B) => C) = self.map2(fga, fgb)(G.map2(_,_)(f))
 
       override def map[A, B](fa: F[G[A]])(f: (A) => B): F[G[B]] = ???
     }
@@ -265,14 +265,13 @@ case class WebForm(name: String, birthdate: Date, phoneNumber: String) {
   *  even though map can be written in terms of fold for things like List, it isn't so in general. An
   *  example of this is Iterate (apparently)
   */
-trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
+trait Traverse[F[_]] extends Functor[F] with Foldable[F] { self =>
   def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
 
   /**
     * This does something quiet cool - if G is an applicative functor, then sequence swaps F and G in F[G[A]]
     */
   def sequence[G[_]: Applicative,A](fga: F[G[A]]): G[F[A]] = traverse(fga)(ga => ga)
-
 
   /**
     * Exercise 12.14: (hard) implement map in terms of traverse as a method on traverse[F]
@@ -303,7 +302,7 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   implicit def monoidApplicative[M](M: Monoid[M]) = new Applicative[({ type f[x] = Const[M,x] })#f] {
     override def unit[A](a: => A): M = M.zero
     //override def apply[A,B](m1: M)(m2: M): M = M.op(m1, m2)
-    def map2[A,B,C](m1: M, m2: M)(f: (A,B) => C): M = M.op(m1, m2)
+    override def map2[A,B,C](m1: M, m2: M)(f: (A,B) => C): M = M.op(m1, m2)
   }
 
   def foldMap[A,M](as: F[A])(f: A => M)(mb: Monoid[M]): M =
@@ -346,7 +345,7 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
       _ <- set(s2)
     } yield b)).run(s)
 
-  def toList[A](fa: F[A]): List[A] =
+  override def toList[A](fa: F[A]): List[A] =
     mapAccum(fa, List[A]())((a, s) => ((), a :: s))._2.reverse
 
   def zipWithIndex[A](ta: F[A]): F[(A, Int)] =
@@ -367,6 +366,49 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
     * Exercise 12.17 implement foldLeft
     */
   def foldLeft[A,B](fa: F[A])(z: B)(f: (B, A) => B): B = mapAccum(fa, z)((a,b) => ((), f(b,a)))._2
+  def foldRight[A,B](fa: F[A])(z: B)(f: (A, B) => B): B = mapAccum(fa, z)((a,b) => ((), f(a,b)))._2
+
+  /**
+    * Note traverse must preserve the shape of it's argument. If we try to create zip then it will only work
+    * if the shapes are the same
+    */
+  def zip[A,B](fa: F[A], fb: F[B]): F[(A,B)] =
+    (mapAccum(fa, toList(fb)) {
+      case (a, Nil) => sys.error("zip: Incompatible shapes")
+      case (a, b :: bs) => ((a,b), bs)
+    })._1
+
+  /**
+    * we can change this so one side or another is more dominant - duals?
+    */
+  def zipL[A,B](fa: F[A], fb: F[B]): F[(A, Option[B])] =
+    (mapAccum(fa, toList(fb)) {
+      case (a, Nil) => ((a, None), Nil)
+      case (a, b :: bs) => ((a, Some(b)), bs)
+    })._1
+
+  def zipR[A,B](fa: F[A], fb: F[B]): F[(Option[A], B)] =
+    (mapAccum(fb, toList(fa)) {
+      case (b, Nil) => ((None, b), Nil)
+      case (b, a :: as) => ((Some(a), b), as)
+    })._1
+
+  /**
+    * Exercise 12.18: use applicative functor things to write the fusion of traversals
+    *  ok ... so asside from the type lambda, this kind of makes sense
+    */
+  def fuse[M[_],N[_],A,B](fa: F[A])(f: A => M[B], g: A => N[B])
+    (implicit M: Applicative[M], N: Applicative[N]): (M[F[B]], N[F[B]]) =
+    traverse[({type f[x] = (M[x], N[x])})#f, A, B](fa)(a => (f(a), g(a)))(M product N)
+
+  /**
+    * Exercise 12.19: implement the composition of two Traverse functions
+    */
+  def compose[G[_]](implicit G: Traverse[G]): Traverse[({type f[x] = F[G[x]]})#f] =
+    new Traverse[({type f[x] = F[G[x]]})#f] {
+      override def traverse[M[_]: Applicative, A, B](fa: F[G[A]])(f: A => M[B]) =
+        self.traverse(fa)((ga: G[A]) => G.traverse(ga)(f))
+    }
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
@@ -401,7 +443,10 @@ object Traverse {
     override def map[A, B](fa: Tree[A])(f: (A) => B): Tree[B] = ???
 
     // OK the trick here is to see that you need listTraverse
-    def traverse[G[_]: Applicative,A,B](fa: Tree[A])(f: A => G[B])(implicit G: Applicative[G]): G[Tree[B]] =
-      G.map2(f(fa.head), listTraverse.traverse(fa.tail)(a => traverse(a)(f)))(Tree(_, _))
+//    def traverse[G[_]: Applicative,A,B](fa: Tree[A])(f: A => G[B])(implicit G: Applicative[G]): G[Tree[B]] =
+//      G.map2(f(fa.head), listTraverse.traverse(fa.tail)(a => traverse(a)(f)))(Tree(_, _))
+
+//    def traverse[M[_],A,B](ta: Tree[A])(f: A => M[B])(implicit M: Applicative[M]): M[Tree[B]] =
+//      M.map2(f(ta.head), listTraverse.traverse(ta.tail)(a => traverse(a)(f)))(Tree(_, _))
   }
 }
