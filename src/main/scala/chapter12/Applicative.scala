@@ -212,6 +212,16 @@ object Monad {
     override def flatMap[A,B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
       st flatMap f
   }
+
+  /**
+    * Exercise 12.20: Implement the composition of two monads, where one of them
+    *  is traversable
+    */
+  def composeM[F[_], G[_]](F: Monad[F], G: Monad[G], T: Traverse[G]): Monad[({type f[x] = F[G[x]]})#f] =
+    new Monad[({type f[x] = F[G[x]]})#f] {
+      def unit[A](a: => A): F[G[A]] = F.unit(G.unit(a))
+      override def flatMap[A,B](mna: F[G[A]])(f: A => F[G[B]]): F[G[B]] = F.flatMap(mna)(na => F.map(T.traverse(na)(f))(G.join))
+    }
 }
 
 /**
